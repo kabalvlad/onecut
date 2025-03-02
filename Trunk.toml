@@ -1,0 +1,11 @@
+[build]
+target = "./index.html"
+copy-files = ["static"]
+
+
+[watch]
+ignore = ["./src-tauri"]
+
+[serve]
+port = 1420
+open = false
