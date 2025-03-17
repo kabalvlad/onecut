@@ -1,18 +1,52 @@
-// В начале файла добавьте импорт функции расчета
-use crate::backend::calculate_dxf_length; // путь может отличаться в зависимости от структуры проекта
+use yew::prelude::*;
+use web_sys::{Event, FileReader, HtmlInputElement};
+use wasm_bindgen::{JsCast, closure::Closure};
+use wasm_bindgen_futures::spawn_local;
+use js_sys::ArrayBuffer;
+use std::collections::VecDeque;
+use std::rc::Rc;
+use std::cell::RefCell;
+use crate::models::FileData;
+use serde::{Serialize, Deserialize};
+use crate::dxf::dxf_processor::calculate_dxf_length;
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct DxfCalculationResult {
+    pub total_length: f64,
+    pub error: Option<String>,
+}
+
+#[derive(Serialize, Deserialize)]
+struct SetCutLengthArgs {
+    cut_length: f32,
+}
+
+
+
+// Изменяем функцию add_message для работы с Rc<RefCell>
+fn add_message(history: &Rc<RefCell<VecDeque<String>>>, message: String) {
+    let mut history = history.borrow_mut();
+    if history.len() >= 30 {
+        history.pop_back();
+    }
+    history.push_front(message);
+}
 
 pub fn handle_file_select(
+    cut_length: UseStateHandle<f32>,
     history: UseStateHandle<VecDeque<String>>,
     file_data: UseStateHandle<Option<FileData>>
 ) -> Callback<Event> {
     let history_rc = Rc::new(RefCell::new((*history).clone()));
     let history_state = history.clone();
+    let cut_length = cut_length.clone();
 
     Callback::from(move |event: Event| {
         let input: HtmlInputElement = event.target_unchecked_into();
         let file_data = file_data.clone();
         let history_rc = history_rc.clone();
         let history_state = history_state.clone();
+        let cut_length = cut_length.clone();
 
         if let Some(files) = input.files() {
             if let Some(file) = files.get(0) {
@@ -35,69 +69,47 @@ pub fn handle_file_select(
                     let reader_clone = reader.clone();
                     let history_rc = history_rc.clone();
                     let history_state = history_state;
+                    let cut_length = cut_length.clone();
 
                     let onload = Closure::wrap(Box::new(move |_: web_sys::Event| {
                         if let Ok(buffer) = reader_clone.result() {
                             if let Ok(array_buffer) = buffer.dyn_into::<ArrayBuffer>() {
                                 let bytes = js_sys::Uint8Array::new(&array_buffer).to_vec();
-
+                            
                                 match String::from_utf8(bytes) {
                                     Ok(content) => {
-                                        // Создаем объект FileData
                                         let file_data_obj = FileData {
                                             name: file_name.clone(),
                                             content: content.clone(),
                                         };
 
-                                        // Создаем копию для расчета длины
-                                        let file_data_for_calculation = FileData {
-                                            name: file_data_obj.name.clone(),
-                                            content: file_data_obj.content.clone(),
-                                        };
+                                        file_data.set(Some(file_data_obj.clone()));
 
-                                        // Сохраняем оригинальные данные
-                                        file_data.set(Some(file_data_obj));
+                                        match calculate_dxf_length(file_data_obj) {
+                                            Ok(result) => {
+                                                // Добавляем все сообщения о результатах
+                                                add_message(&history_rc, format!("Общая длина всех линий: {:.2} мм", result));
+                                                history_state.set(history_rc.borrow().clone());
 
-                                        // Вызываем функцию расчета длины
-                                        match calculate_dxf_length(file_data_for_calculation) {
-                                            Ok(length) => {
-                                                add_message(
-                                                    &history_rc,
-                                                    format!("Общая длина линий: {:.2} мм", length)
-                                                );
+                                                // Записываем длину реза в переменную
+                                                cut_length.set(result as f32);
+
+                                                // Выводим сообщение о результате
+                                                add_message(&history_rc, format!("Длина реза установлена: {:.2} мм", result));
+                                                history_state.set(history_rc.borrow().clone());
                                             },
                                             Err(err) => {
                                                 add_message(
                                                     &history_rc,
                                                     format!("Ошибка при расчете длины: {}", err)
                                                 );
+                                                history_state.set(history_rc.borrow().clone());
                                             }
                                         }
 
-                                        add_message(&history_rc, "Файл успешно загружен".to_string());
-                                        
-                                        let lines_count = content.lines().count();
-                                        let file_size = content.len();
-                                        
-                                        let first_lines = content.lines()
-                                            .take(30)
-                                            .collect::<Vec<_>>()
-                                            .join("\n");
-                                        
-                                        let file_summary = format!(
-                                            "Содержимое файла: {} строк, {} байт. Начало файла: {}...", 
-                                            lines_count, 
-                                            file_size,
-                                            if first_lines.len() > 50 { &first_lines[0..50] } else { &first_lines }
-                                        );
-                                        
-                                        add_message(&history_rc, file_summary);
-                                        
-                                        if content.contains("ENTITIES") && content.contains("SECTION") {
-                                            add_message(&history_rc, "Обнаружена структура DXF файла".to_string());
-                                        }
                                     }
                                     Err(_) => add_message(&history_rc, "Ошибка при чтении содержимого файла".to_string()),
+                                    
                                 }
                             }
                         }

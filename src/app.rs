@@ -31,10 +31,11 @@ pub fn app() -> Html {
 
     // Обработчик для выбора файла
     let handle_file_select = handle_file_select(
-    //file_path.clone(),
+        cut_length.clone(),
         history.clone(),
-        file_data.clone()       
+        file_data.clone()
     );
+    
 
     // Обработчик ввода длины реза
     let handle_cut_length_input = handle_cut_length_input(

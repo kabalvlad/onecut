@@ -5,8 +5,6 @@ pub struct TypeCutting(pub Mutex<String>);
 pub struct TypeMaterial(pub Mutex<String>);
 pub struct Thickness(pub Mutex<f32>);
 pub struct CutLength(pub Mutex<f32>); // Новая структура для длины реза
-pub struct DxfPath(pub Mutex<String>);
-
 
 impl TypeCutting {
     pub fn new() -> Self {
@@ -32,33 +30,7 @@ impl CutLength {
     }
 }
 
-impl DxfPath {
-    pub fn new() -> Self {
-        DxfPath(Mutex::new(String::new()))
-    }
-}
 
-#[tauri::command]
-pub fn set_dxf_path(
-    state: State<DxfPath>,
-    dxf_path: String
-) -> Result<String, String> {
-    println!("Попытка установить путь к DXF файлу: {}", dxf_path);  // Логирование
-    let mut path = state.0.lock().map_err(|_| "Failed to lock state")?;
-    *path = dxf_path.clone();
-    println!("Путь к DXF файлу успешно установлен: {}", dxf_path);  // Логирование
-    Ok(format!("DXF путь успешно установлен: {}", dxf_path))
-}
-
-#[tauri::command]
-pub fn get_dxf_path(
-    state: State<DxfPath>
-) -> Result<String, String> {
-    println!("Запрос на получение пути к DXF файлу");  // Логирование
-    let path = state.0.lock().map_err(|_| "Failed to lock state")?;
-    println!("Получен путь к DXF файлу: {}", path);  // Логирование
-    Ok(format!("Текущий путь к DXF файлу: {}", path))
-}
 
 
 

@@ -3,9 +3,7 @@ use state::{TypeCutting, set_type_cutting, get_type_cutting};
 use state::{TypeMaterial, set_type_material, get_type_material};
 use state::{Thickness, set_thickness, get_thickness};
 use state::{CutLength, set_cut_length, get_cut_length};
-use state::{DxfPath, set_dxf_path, get_dxf_path};
-mod dxf_processor;
-use dxf_processor::calculate_dxf_length;
+
 
 
 
@@ -29,7 +27,7 @@ pub fn run() {
         .manage(TypeMaterial::new())
         .manage(Thickness::new())
         .manage(CutLength::new())
-        .manage(DxfPath::new())
+        
         
         // Регистрируем обработчики команд, которые можно вызывать из frontend
         // set_type_cutting и get_type_cutting - это функции, определенные в state.rs
@@ -42,9 +40,7 @@ pub fn run() {
             get_thickness,
             set_cut_length,
             get_cut_length,
-            set_dxf_path,
-            get_dxf_path,
-            calculate_dxf_length
+                     
 
         ])
         
