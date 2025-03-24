@@ -37,7 +37,8 @@ h2 {
 .cutting-types,
 .material-types,
 .thickness-selector,
-.cut-length-section {
+.cut-length-section,
+.bending-points-section {
     background: #f8f9fa;     /* Светло-серый фон */
     padding: 20px;           /* Внутренние отступы */
     border-radius: 8px;      /* Скругленные углы */
@@ -116,6 +117,62 @@ select {
     display: flex;           /* Горизонтальное выравнивание элементов */
     justify-content: space-between; /* Распределение по краям */
     align-items: center;     /* Центрирование по вертикали */
+}
+
+/* ===== СЕКЦИЯ ТОЧЕК СГИБА ===== */
+.bending-points-section {
+    margin: 20px 0;
+    padding: 15px;
+    border-radius: 8px;
+    background-color: #f8f9fa;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.bending-points-section h2 {
+    margin-top: 0;
+    margin-bottom: 15px;
+    font-size: 1.2rem;
+    color: #333;
+}
+
+.bending-points-options {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 15px;
+}
+
+.bending-points-options label {
+    display: flex;
+    align-items: center;
+    margin-right: 20px;
+    cursor: pointer;
+}
+
+.bending-points-options input[type="radio"] {
+    margin-right: 8px;
+}
+
+.bending-points-options input[type="number"] {
+    width: 80px;
+    padding: 8px 10px;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+.bending-points-options input[type="number"]:disabled {
+    background-color: #e9ecef;
+    cursor: not-allowed;
+}
+
+.bending-points-options .radio-group {
+    display: flex;
+    gap: 15px;
+}
+
+.number-input-container {
+    margin-left: 10px;
 }
 
 /* ===== ИНФОРМАЦИОННОЕ ОКНО И ИСТОРИЯ ===== */
@@ -265,4 +322,124 @@ select {
     .input-mode-selector {
         flex-direction: column; /* Вертикальное расположение элементов */
     }
+    
+    /* Адаптация для секции точек сгиба на мобильных устройствах */
+    .bending-points-options {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .bending-points-options label {
+        margin-bottom: 10px;
+    }
+    
+    .bending-points-options input[type="number"] {
+        margin-top: 10px;
+    }
 }
+
+/* Блок для ввода типа резьбы и гибки в вставки */
+/* Секция с местами гибки и резьбой/вставками/цековками */
+.bending-points-threads-inserts-mats-section {
+    background: #f8f9fa;
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* Контейнер для колонок */
+.section-columns {
+    display: flex;
+    gap: 30px;
+    flex-wrap: wrap;
+}
+
+/* Стиль для каждой колонки */
+.section-column {
+    flex: 1;
+    min-width: 250px;
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* Центрирование всего содержимого колонки */
+}
+
+/* Заголовки в колонках */
+.section-column h2 {
+    margin-top: 0;
+    margin-bottom: 15px;
+    font-size: 1.2rem;
+    color: #333;
+    text-align: center; /* Центрирование текста заголовка */
+}
+
+/* Общие стили для опций в обеих секциях */
+.bending-points-options,
+.threads-inserts-mats-options {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    width: 100%; /* Занимать всю ширину колонки */
+    align-items: center; /* Центрирование содержимого */
+}
+
+/* Группа радио-кнопок */
+.radio-group {
+    display: flex;
+    gap: 15px;
+    justify-content: center; /* Центрирование радио-кнопок */
+}
+
+/* Стиль для меток */
+.radio-group label {
+    display: flex;
+    align-items: center;
+    margin-right: 20px;
+    cursor: pointer;
+}
+
+/* Стиль для радио-кнопок */
+.radio-group input[type="radio"] {
+    margin-right: 8px;
+}
+
+/* Контейнер для числового ввода */
+.number-input-container {
+    margin-top: 5px;
+    display: flex;
+    justify-content: center; /* Центрирование поля ввода */
+}
+
+/* Стиль для числового ввода */
+.number-input-container input[type="number"] {
+    width: 100%;
+    max-width: 150px;
+    padding: 8px 10px;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+/* Стиль для отключенного числового ввода */
+.number-input-container input[type="number"]:disabled {
+    background-color: #e9ecef;
+    cursor: not-allowed;
+}
+
+/* Адаптивность для мобильных устройств */
+@media (max-width: 768px) {
+    .section-columns {
+        flex-direction: column;
+        gap: 20px;
+    }
+    
+    .section-column {
+        width: 100%;
+    }
+    
+    .radio-group {
+        flex-wrap: wrap;
+    }
+}
+
+

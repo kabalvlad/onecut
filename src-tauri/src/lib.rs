@@ -3,6 +3,8 @@ use state::{TypeCutting, set_type_cutting, get_type_cutting};
 use state::{TypeMaterial, set_type_material, get_type_material};
 use state::{Thickness, set_thickness, get_thickness};
 use state::{CutLength, set_cut_length, get_cut_length};
+use state::{BendingPoints, set_bending_points, get_bending_points};
+use state::{ThreadsInsertsMats, set_threads_inserts_mats, get_threads_inserts_mats};
 
 
 
@@ -27,6 +29,8 @@ pub fn run() {
         .manage(TypeMaterial::new())
         .manage(Thickness::new())
         .manage(CutLength::new())
+        .manage(BendingPoints::new())
+        .manage(ThreadsInsertsMats::new())
         
         
         // Регистрируем обработчики команд, которые можно вызывать из frontend
@@ -40,6 +44,10 @@ pub fn run() {
             get_thickness,
             set_cut_length,
             get_cut_length,
+            set_bending_points,
+            get_bending_points,
+            set_threads_inserts_mats,
+            get_threads_inserts_mats
                      
 
         ])

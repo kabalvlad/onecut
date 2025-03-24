@@ -3,7 +3,13 @@ use std::collections::VecDeque;
 use crate::models::FileData;
 use crate::handlers::{handle_cut_length_input, handle_input_mode_change, handle_file_select
 , handle_thickness_input, handle_thickness_select, handle_cutting_type_change, handle_material_change,
-handle_clear_thickness};
+handle_clear_thickness, handle_bending_points_radio_change, handle_bending_points_input_change,
+handle_threads_inserts_mats_radio_change, handle_threads_inserts_mats_input_change};
+
+
+
+
+
 
 
 
@@ -26,6 +32,11 @@ pub fn app() -> Html {
     let is_manual_input = use_state(|| false);
     let cut_length = use_state(|| 0.0f32); 
     let file_data = use_state(|| None::<FileData>);
+    let bending_points_radio_state = use_state(|| String::from("no"));
+    let threads_inserts_mats_radio_state = use_state(|| String::from("no"));
+ 
+    
+
 
   
 
@@ -86,7 +97,27 @@ pub fn app() -> Html {
         selected_material.clone(),
         history.clone()
     );
+    // Обработчик для количества точек сгиба    
+    let bending_points_input = use_state(|| String::new());
+    let handle_bending_points_input_change = handle_bending_points_input_change(bending_points_input.clone());
 
+    let handle_bending_points_radio_change = handle_bending_points_radio_change(
+        bending_points_radio_state.clone(),
+        bending_points_input.clone(),
+    );
+    // Обработчик для количества резьбы вставко и цековок 
+
+    let threads_inserts_mats_input = use_state(|| String::new());
+    let handle_threads_inserts_mats_input_change = handle_threads_inserts_mats_input_change(threads_inserts_mats_input.clone());
+
+    let handle_threads_inserts_mats_radio_change = handle_threads_inserts_mats_radio_change(
+        threads_inserts_mats_radio_state.clone(),
+        threads_inserts_mats_input.clone(),
+    );    
+
+
+
+    
     html! {
         <main class="container">
             <div class="main-content">
@@ -293,8 +324,89 @@ pub fn app() -> Html {
                         </div>
                     </div>
                 </div>
+                <div class="bending-points-threads-inserts-mats-section">
+                    <div class="section-columns">
+                        <div class="section-column">
+                            <h2>{"Места гибки"}</h2>
+                            <div class="bending-points-options">
+                                <div class="radio-group">
+                                    <label>
+                                        <input 
+                                            type="radio"
+                                            name="bending-points"
+                                            value="no"
+                                            checked={*bending_points_radio_state == "no"}
+                                            onchange={handle_bending_points_radio_change.clone()}
+                                        />
+                                        {"Нет"}
+                                    </label>
+                                    <label>
+                                        <input 
+                                            type="radio"
+                                            name="bending-points"
+                                            value="yes"
+                                            checked={*bending_points_radio_state == "yes"}
+                                            onchange={handle_bending_points_radio_change.clone()}
+                                        />
+                                        {"Да"}
+                                    </label>
+                                </div>
+                                <div class="number-input-container">
+                                    <input 
+                                        type="number"
+                                        placeholder="Количество"
+                                        min="0"
+                                        value={(*bending_points_input).clone()}
+                                        disabled={*bending_points_radio_state == "no"}
+                                        onchange={handle_bending_points_input_change.clone()}
+                                    />
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="section-column">
+                            <h2>{r"Резьба \ вставки \ цековки "}</h2>
+                            <div class="threads-inserts-mats-options">
+                                <div class="radio-group">
+                                    <label>
+                                        <input 
+                                            type="radio"
+                                            name="threads-inserts-mats"
+                                            value="no"
+                                            checked={*threads_inserts_mats_radio_state == "no"}
+                                            onchange={handle_threads_inserts_mats_radio_change.clone()}
+                                        />
+                                        {"Нет"}
+                                    </label>
+                                    <label>
+                                        <input 
+                                            type="radio"
+                                            name="threads-inserts-mats"
+                                            value="yes"
+                                            checked={*threads_inserts_mats_radio_state == "yes"}
+                                            onchange={handle_threads_inserts_mats_radio_change.clone()}
+                                        />
+                                        {"Да"}
+                                    </label>
+                                </div>
+                                <div class="number-input-container">
+                                    <input 
+                                        type="number"
+                                        placeholder="Количество"
+                                        min="0"
+                                        value={(*threads_inserts_mats_input).clone()}
+                                        disabled={*threads_inserts_mats_radio_state == "no"}
+                                        onchange={handle_threads_inserts_mats_input_change.clone()}
+                                    />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            
+            //тут блок заканчиваеться где вводят                              
             </div>
-
+            // тут блок информации начинаеться
             <div class="info-box">
                 <h2>{"Информация"}</h2>
                 <div class="history-list">
@@ -310,4 +422,6 @@ pub fn app() -> Html {
         </main>
     }
 }
+
+
 

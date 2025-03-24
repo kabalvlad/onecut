@@ -5,6 +5,21 @@ pub struct TypeCutting(pub Mutex<String>);
 pub struct TypeMaterial(pub Mutex<String>);
 pub struct Thickness(pub Mutex<f32>);
 pub struct CutLength(pub Mutex<f32>); // Новая структура для длины реза
+pub struct BendingPoints(pub Mutex<Vec<i32>>);
+pub struct ThreadsInsertsMats(pub Mutex<Vec<i32>>); // Новая структура для вставок и ниток и мats
+
+
+impl ThreadsInsertsMats {
+    pub fn new() -> Self {
+        ThreadsInsertsMats(Mutex::new(Vec::new()))
+    }
+}
+
+impl BendingPoints {
+    pub fn new() -> Self {
+        BendingPoints(Mutex::new(Vec::new()))
+    }
+}
 
 impl TypeCutting {
     pub fn new() -> Self {
@@ -30,10 +45,44 @@ impl CutLength {
     }
 }
 
+#[tauri::command]
+pub fn set_threads_inserts_mats(
+    state: State<ThreadsInsertsMats>,
+    mats: Vec<i32>
+) -> Result<(), String> {
+    let mut threads_inserts_mats = state.0.lock().map_err(|_| "Failed to lock state")?;
+    *threads_inserts_mats = mats;
+    Ok(())
+}
+
+
+#[tauri::command]
+pub fn get_threads_inserts_mats(
+    state: State<ThreadsInsertsMats>
+) -> Result<Vec<i32>, String> {
+    let threads_inserts_mats = state.0.lock().map_err(|_| "Failed to lock state")?;
+    Ok(threads_inserts_mats.clone())    
+}
 
 
 
+#[tauri::command]
+pub fn get_bending_points(
+    state: State<BendingPoints>
+) -> Result<Vec<i32>, String> {
+    let bending_points = state.0.lock().map_err(|_| "Failed to lock state")?;
+    Ok(bending_points.clone())
+}
 
+#[tauri::command]
+pub fn set_bending_points(
+    state: State<BendingPoints>,
+    points: Vec<i32>
+) -> Result<(), String> {
+    let mut bending_points = state.0.lock().map_err(|_| "Failed to lock state")?;
+    *bending_points = points;
+    Ok(())
+}
 
 #[tauri::command]
 pub fn set_type_cutting(

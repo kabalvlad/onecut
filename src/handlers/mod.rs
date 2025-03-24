@@ -6,6 +6,11 @@ mod handle_thickness_select;
 mod handle_radio_change;
 mod handle_material_change;
 mod handle_clear_thickness;
+mod handle_bending_points_radio_change;
+mod handle_bending_points_input_change;
+mod handle_threads_inserts_mats_radio_change;
+mod handle_threads_inserts_mats_input_change;
+
 
 pub use handle_cut_length_input::handle_cut_length_input;
 pub use handle_input_mode_change::handle_input_mode_change;
@@ -15,3 +20,7 @@ pub use handle_thickness_select::handle_thickness_select;
 pub use handle_radio_change::handle_cutting_type_change;
 pub use handle_material_change::handle_material_change;
 pub use handle_clear_thickness::handle_clear_thickness;
+pub use handle_bending_points_radio_change::handle_bending_points_radio_change;
+pub use handle_bending_points_input_change::handle_bending_points_input_change;
+pub use handle_threads_inserts_mats_radio_change::handle_threads_inserts_mats_radio_change;
+pub use handle_threads_inserts_mats_input_change::handle_threads_inserts_mats_input_change;
