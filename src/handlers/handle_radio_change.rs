@@ -1,8 +1,9 @@
 use web_sys::{Event, HtmlInputElement};
 use yew::prelude::*;
-use std::collections::VecDeque;
 use wasm_bindgen::prelude::*;
 use serde::{Serialize, Deserialize};
+use wasm_bindgen_futures::spawn_local;
+use crate::models::{AppState, AppAction};
 
 //===============================================================
 // Обработчик для выбора типа резки
@@ -20,13 +21,14 @@ pub struct SetTypeCuttingArgs {
 }
 
 pub fn handle_cutting_type_change(
-    selected_cutting: UseStateHandle<String>,
-    history: UseStateHandle<VecDeque<String>>,
+    state: UseReducerHandle<AppState>,
 ) -> Callback<Event> {
     Callback::from(move |e: Event| {
         let target = e.target_dyn_into::<HtmlInputElement>().unwrap();
         let value = target.value();
-        selected_cutting.set(value.clone());
+        
+        // Обновляем выбранный тип резки через редуктор
+        state.dispatch(AppAction::SetCuttingType(value.clone()));
         
         let cutting_code = match value.as_str() {
             "laser" => "LC",
@@ -34,28 +36,54 @@ pub fn handle_cutting_type_change(
             "hydro" => "HC",
             _ => "",
         };
-
+        
         let args = SetTypeCuttingArgs {
             cutting_type: cutting_code.to_string(),
         };
         
-        wasm_bindgen_futures::spawn_local(async move {
+        let state_clone = state.clone();
+        spawn_local(async move {
             let args = serde_wasm_bindgen::to_value(&args).unwrap();
-            let _ = invoke("set_type_cutting", args).await;
+            match invoke("set_type_cutting", args).await {
+                result if !result.is_undefined() => {
+                    // Добавляем сообщение в историю
+                    let message = match value.as_str() {
+                        "laser" => "Выбрана лазерная резка",
+                        "plasma" => "Выбрана плазменная резка",
+                        "hydro" => "Выбрана гидроабразивная резка",
+                        _ => "Выберите тип резки",
+                    }.to_string();
+                    
+                    state_clone.dispatch(AppAction::AddHistoryMessage(message));
+                    
+                    // Пересчитываем цены
+                    let price_per_part = calculate_price_per_part(&state_clone);
+                    let price_total = calculate_total_price(&state_clone);
+                    
+                    state_clone.dispatch(AppAction::UpdatePrices {
+                        price_per_part,
+                        price_total,
+                    });
+                },
+                _ => {
+                    state_clone.dispatch(AppAction::AddHistoryMessage(
+                        "Ошибка при установке типа резки".to_string()
+                    ));
+                }
+            }
         });
-
-        let message = match value.as_str() {
-            "laser" => "Выбрана лазерная резка",
-            "plasma" => "Выбрана плазменная резка",
-            "hydro" => "Выбрана гидроабразивная резка",
-            _ => "Выберите тип резки",
-        }.to_string();
-
-        let mut new_history = (*history).clone();
-        if new_history.len() >= 30 {
-            new_history.pop_back();
-        }
-        new_history.push_front(message);
-        history.set(new_history);
     })
+}
+
+// Вспомогательные функции для расчета цен
+fn calculate_price_per_part(state: &AppState) -> f32 {
+    // Здесь должна быть ваша логика расчета цены за деталь
+    // Используйте значения из state
+    0.0 // Замените на реальный расчет
+}
+
+fn calculate_total_price(state: &AppState) -> f32 {
+    // Здесь должна быть ваша логика расчета общей цены
+    // Обычно это price_per_part * parts_count
+    state.price_per_part * state.parts_count as f32
 }

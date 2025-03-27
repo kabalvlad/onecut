@@ -1,10 +1,10 @@
 use web_sys::Event;
 use yew::prelude::*;
-use std::collections::VecDeque;
 use web_sys::HtmlInputElement;
 use std::str::FromStr;
 use serde::{Deserialize, Serialize};
 use wasm_bindgen::prelude::*;
+use crate::models::{AppState, AppAction};
 
 // Добавляем определение функции invoke
 #[wasm_bindgen]
@@ -19,23 +19,23 @@ struct SetCutLengthArgs {
 }
 
 pub fn handle_cut_length_input(
-    cut_length: UseStateHandle<f32>,
-    history: UseStateHandle<VecDeque<String>>
+    state: UseReducerHandle<AppState>,
 ) -> Callback<Event> {
-    let cut_length = cut_length.clone();
-    let history = history.clone();
-
     Callback::from(move |e: Event| {
         let input = e.target_dyn_into::<HtmlInputElement>().unwrap();
         let value = input.value();
         
         let normalized_value = value.replace(',', ".");
         
+
+        
         match f32::from_str(&normalized_value) {
             Ok(length) => {
                 if length >= 0.0 {
-                    cut_length.set(length);
+                    // Обновляем длину реза через dispatch
+                    state.dispatch(AppAction::SetCutLength(length));
 
+                    // Отправляем данные на бэкенд
                     let args = SetCutLengthArgs { cut_length: length };
                     
                     wasm_bindgen_futures::spawn_local(async move {
@@ -43,22 +43,18 @@ pub fn handle_cut_length_input(
                         let _ = invoke("set_cut_length", args).await;
                     });
 
-                    let mut new_history = (*history).clone();
-                    if new_history.len() >= 30 {
-                        new_history.pop_back();
-                    }
-                    new_history.push_front(format!("Установлена длина реза: {:.2} мм", length));
-                    history.set(new_history);
+                    // Добавляем сообщение в историю
+                    state.dispatch(AppAction::AddHistoryMessage(
+                        format!("Установлена длина реза: {:.2} мм", length)
+                    ));
                 }
             },
             Err(_) => {
                 if !value.is_empty() {
-                    let mut new_history = (*history).clone();
-                    if new_history.len() >= 30 {
-                        new_history.pop_back();
-                    }
-                    new_history.push_front("Ошибка: введите корректное числовое значение".to_string());
-                    history.set(new_history);
+                    // Добавляем сообщение об ошибке в историю
+                    state.dispatch(AppAction::AddHistoryMessage(
+                        "Ошибка: введите корректное числовое значение".to_string()
+                    ));
                 }
             }
         }

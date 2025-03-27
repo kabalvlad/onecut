@@ -442,4 +442,160 @@ select {
     }
 }
 
+/* ===== НОВЫЕ СТИЛИ ДЛЯ КОНТЕЙНЕРОВ ТИПОВ РЕЗКИ И МАТЕРИАЛОВ В ОДНУ СТРОКУ ===== */
+/* Контейнер-строка для размещения типов резки и материалов */
+.container-row {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    width: 100%;
+    gap: 20px; /* Расстояние между колонками */
+    margin-bottom: 20px;
+}
+
+/* Стиль для колонок в контейнере-строке */
+.column {
+    flex: 1; /* Каждая колонка занимает равное пространство */
+    padding: 20px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* Заголовки в колонках */
+.cutting-types h2, .material-types h2 {
+    margin-top: 0;
+    margin-bottom: 15px;
+    font-size: 1.2rem;
+    color: #333;
+    text-align: center;
+}
+
+/* Контейнеры для опций в колонках */
+.cutting-options, .material-options {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+/* Адаптивность для контейнера-строки */
+@media (max-width: 768px) {
+    .container-row {
+        flex-direction: column;
+        gap: 20px;
+    }
+    
+    .column {
+        width: 100%;
+    }
+}
+
+/* ===== СЕКЦИЯ ДОПОЛНИТЕЛЬНЫХ ОПЦИЙ ===== */
+.section-other-options {
+    background: #f8f9fa;
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* Строка с полями ввода */
+.options-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    margin-bottom: 20px;
+    align-items: flex-end; /* Выравнивание по нижнему краю для кнопки */
+}
+
+/* Строка с результатами */
+.results-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 30px;
+    padding-top: 15px;
+    border-top: 1px solid #e0e0e0;
+}
+
+/* Группа ввода (метка + поле) */
+.input-group {
+    flex: 1;
+    min-width: 180px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+/* Группа результата (метка + значение) */
+.result-group {
+    flex: 1;
+    min-width: 200px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+/* Метки для полей ввода и результатов */
+.input-group label,
+.result-group label {
+    font-size: 14px;
+    color: #555;
+    margin-bottom: 5px;
+}
+
+/* Поля ввода */
+.input-group input {
+    padding: 8px 10px;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    font-size: 14px;
+    width: 100%;
+}
+
+/* Блок отображения результата */
+.result-value {
+    padding: 10px;
+    background: #e9ecef;
+    border-radius: 4px;
+    font-size: 16px;
+    font-weight: bold;
+    color: #333;
+    text-align: center;
+}
+
+/* Кнопка очистки */
+.section-other-options .clear-button {
+    padding: 8px 15px;
+    height: 38px; /* Высота как у полей ввода */
+    background-color: #ff4444;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    white-space: nowrap;
+}
+
+.section-other-options .clear-button:hover {
+    background-color: #ff6666;
+}
+
+/* Адаптивность для мобильных устройств */
+@media (max-width: 768px) {
+    .options-row,
+    .results-row {
+        flex-direction: column;
+        gap: 15px;
+    }
+    
+    .input-group,
+    .result-group {
+        width: 100%;
+    }
+    
+    .section-other-options .clear-button {
+        width: 100%;
+        margin-top: 10px;
+    }
+}
 

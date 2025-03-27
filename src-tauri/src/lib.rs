@@ -5,6 +5,11 @@ use state::{Thickness, set_thickness, get_thickness};
 use state::{CutLength, set_cut_length, get_cut_length};
 use state::{BendingPoints, set_bending_points, get_bending_points};
 use state::{ThreadsInsertsMats, set_threads_inserts_mats, get_threads_inserts_mats};
+use state::{PriceAllParts, set_price_all_parts, get_price_all_parts};
+use state::{PriceOnePart, set_price_one_part, get_price_one_part};
+use state::{MarginDeal, set_margin_deal, get_margin_deal};
+use state::{CostMaterial, set_cost_material, get_cost_material};
+use state::{QuantityParts, set_quantity_parts, get_quantity_parts};
 
 
 
@@ -31,7 +36,11 @@ pub fn run() {
         .manage(CutLength::new())
         .manage(BendingPoints::new())
         .manage(ThreadsInsertsMats::new())
-        
+        .manage(QuantityParts::new())
+        .manage(CostMaterial::new())
+        .manage(MarginDeal::new())
+        .manage(PriceOnePart::new())
+        .manage(PriceAllParts::new())
         
         // Регистрируем обработчики команд, которые можно вызывать из frontend
         // set_type_cutting и get_type_cutting - это функции, определенные в state.rs
@@ -47,7 +56,17 @@ pub fn run() {
             set_bending_points,
             get_bending_points,
             set_threads_inserts_mats,
-            get_threads_inserts_mats
+            get_threads_inserts_mats,
+            set_quantity_parts,
+            get_quantity_parts,
+            set_cost_material,
+            get_cost_material,
+            set_margin_deal,
+            get_margin_deal,
+            set_price_one_part,
+            get_price_one_part,
+            set_price_all_parts,
+            get_price_all_parts
                      
 
         ])

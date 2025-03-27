@@ -10,8 +10,19 @@ mod handle_bending_points_radio_change;
 mod handle_bending_points_input_change;
 mod handle_threads_inserts_mats_radio_change;
 mod handle_threads_inserts_mats_input_change;
+mod clear_handlers;
+mod handle_margin_change;
+mod handle_material_price_change;
+mod handle_parts_count_change;
+mod handle_get_price_one_part;
+mod handle_get_price_all_parts;
 
-
+pub use handle_get_price_all_parts::handle_get_price_all_parts;
+pub use handle_get_price_one_part::handle_get_price_one_part;
+pub use handle_parts_count_change::handle_parts_count_change;
+pub use handle_material_price_change::handle_material_price_change;
+pub use handle_margin_change::handle_margin_change;
+pub use self::clear_handlers::handle_clear_options;
 pub use handle_cut_length_input::handle_cut_length_input;
 pub use handle_input_mode_change::handle_input_mode_change;
 pub use handle_file_select::handle_file_select;
@@ -24,3 +35,4 @@ pub use handle_bending_points_radio_change::handle_bending_points_radio_change;
 pub use handle_bending_points_input_change::handle_bending_points_input_change;
 pub use handle_threads_inserts_mats_radio_change::handle_threads_inserts_mats_radio_change;
 pub use handle_threads_inserts_mats_input_change::handle_threads_inserts_mats_input_change;
+

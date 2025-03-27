@@ -7,7 +7,41 @@ pub struct Thickness(pub Mutex<f32>);
 pub struct CutLength(pub Mutex<f32>); // Новая структура для длины реза
 pub struct BendingPoints(pub Mutex<Vec<i32>>);
 pub struct ThreadsInsertsMats(pub Mutex<Vec<i32>>); // Новая структура для вставок и ниток и мats
+pub struct QuantityParts(pub Mutex<i32>); // kolichestvo deatlei
+pub struct CostMaterial(pub Mutex<f32>); // cena materiala
+pub struct MarginDeal(pub Mutex<f32>); // margin zakaza
+pub struct PriceOnePart(pub Mutex<f32>); // cena odnoy deatlei
+pub struct PriceAllParts(pub Mutex<f32>); // cena vseh deatlei
 
+impl PriceAllParts {
+    pub fn new() -> Self {
+        PriceAllParts(Mutex::new(0.0))
+    }
+}
+
+impl PriceOnePart {
+    pub fn new() -> Self {
+        PriceOnePart(Mutex::new(0.0))
+    }
+}
+
+impl MarginDeal {
+    pub fn new() -> Self {
+        MarginDeal(Mutex::new(0.0))
+    }
+}
+
+impl CostMaterial {
+    pub fn new() -> Self {
+        CostMaterial(Mutex::new(0.0))
+    }
+}
+
+impl QuantityParts {
+    pub fn new() -> Self {
+        QuantityParts(Mutex::new(0))
+    }
+}
 
 impl ThreadsInsertsMats {
     pub fn new() -> Self {
@@ -44,6 +78,99 @@ impl CutLength {
         CutLength(Mutex::new(0.0))
     }
 }
+
+#[tauri::command]
+pub fn set_quantity_parts(
+    state: State<QuantityParts>,
+    quantity: i32
+) -> Result<(), String> {
+    let mut quantity_parts = state.0.lock().map_err(|_| "Failed to lock state")?;
+    *quantity_parts = quantity;
+    Ok(())
+}
+
+#[tauri::command]
+pub fn get_quantity_parts(
+    state: State<QuantityParts>
+) -> Result<i32, String> {
+    let quantity_parts = state.0.lock().map_err(|_| "Failed to lock state")?;
+    Ok(*quantity_parts)
+}
+
+
+#[tauri::command]
+pub fn set_price_all_parts(
+    state: State<PriceAllParts>,
+    price: f32
+) -> Result<(), String> {
+    let mut price_all_parts = state.0.lock().map_err(|_| "Failed to lock state")?;
+    *price_all_parts = price;
+    Ok(())
+}
+
+#[tauri::command]
+pub fn get_price_all_parts(
+    state: State<PriceAllParts>
+) -> Result<f32, String> {
+    let price_all_parts = state.0.lock().map_err(|_| "Failed to lock state")?;
+    Ok(*price_all_parts)
+}
+
+
+#[tauri::command]
+pub fn set_price_one_part(
+    state: State<PriceOnePart>,
+    price: f32
+) -> Result<(), String> {
+    let mut price_one_part = state.0.lock().map_err(|_| "Failed to lock state")?;
+    *price_one_part = price;
+    Ok(())
+}
+
+#[tauri::command]
+pub fn get_price_one_part(
+    state: State<PriceOnePart>
+) -> Result<f32, String> {
+    let price_one_part = state.0.lock().map_err(|_| "Failed to lock state")?;
+    Ok(*price_one_part)
+}
+
+#[tauri::command]
+pub fn set_margin_deal(
+    state: State<MarginDeal>,
+    margin: f32
+) -> Result<(), String> {
+    let mut margin_deal = state.0.lock().map_err(|_| "Failed to lock state")?;
+    *margin_deal = margin;
+    Ok(())
+}
+
+#[tauri::command]
+pub fn get_margin_deal(
+    state: State<MarginDeal>
+) -> Result<f32, String> {
+    let margin_deal = state.0.lock().map_err(|_| "Failed to lock state")?;
+    Ok(*margin_deal)
+}
+
+#[tauri::command]
+pub fn set_cost_material(
+    state: State<CostMaterial>,
+    cost: f32
+) -> Result<(), String> {
+    let mut cost_material = state.0.lock().map_err(|_| "Failed to lock state")?;
+    *cost_material = cost;
+    Ok(())
+}
+
+#[tauri::command]
+pub fn get_cost_material(
+    state: State<CostMaterial>
+) -> Result<f32, String> {
+    let cost_material = state.0.lock().map_err(|_| "Failed to lock state")?;
+    Ok(*cost_material)
+}
+
 
 #[tauri::command]
 pub fn set_threads_inserts_mats(

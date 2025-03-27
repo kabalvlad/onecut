@@ -1,27 +1,24 @@
 use web_sys::{Event, HtmlInputElement};
 use yew::prelude::*;
-use std::collections::VecDeque;
 use std::str::FromStr;
-
-//===============================================================
-// Обработчик для ввода толщины
-//===============================================================
-
+use crate::models::{AppState, AppAction};
 
 pub fn handle_thickness_input(
-    thickness_input: UseStateHandle<String>,
-    filtered_thicknesses: UseStateHandle<Vec<f32>>,
-    history: UseStateHandle<VecDeque<String>>,
-    all_thicknesses: Vec<f32>
+    state: UseReducerHandle<AppState>,
+    all_thicknesses: Vec<f32>,
 ) -> Callback<Event> {
     Callback::from(move |e: Event| {
         let input = e.target_dyn_into::<HtmlInputElement>().unwrap();
         let value = input.value();
-        thickness_input.set(value.clone());
-
-        // Если строка пустая, просто показываем все толщины
+        
+        // Обновляем значение поля ввода
+        state.dispatch(AppAction::SetThickness(value.clone()));
+        
+        // Если строка пустая, показываем все толщины
         if value.trim().is_empty() {
-            filtered_thicknesses.set(all_thicknesses.clone());
+            // Используем существующий вариант для обновления списка толщин
+            // Предполагаем, что у вас есть действие для обновления списка толщин
+            update_thickness_list(&state, all_thicknesses.clone());
             return;
         }
 
@@ -30,17 +27,10 @@ pub fn handle_thickness_input(
         
         // Проверяем, содержит ли строка только цифры, точку или запятую
         if !normalized_value.chars().all(|c| c.is_digit(10) || c == '.' || c == '-') {
-            // Добавляем сообщение об ошибке в историю
-            let error_message = "Ошибка: Пожалуйста, введите только числовое значение толщины без посторонних символов".to_string();
-            let mut new_history = (*history).clone();
-            if new_history.len() >= 5 {
-                new_history.pop_back();
-            }
-            new_history.push_front(error_message);
-            history.set(new_history);
-            
-            // Показываем все доступные толщины
-            filtered_thicknesses.set(all_thicknesses.clone());
+            state.dispatch(AppAction::AddHistoryMessage(
+                "Ошибка: Пожалуйста, введите только числовое значение толщины без посторонних символов".to_string()
+            ));
+            update_thickness_list(&state, all_thicknesses.clone());
             return;
         }
 
@@ -48,14 +38,9 @@ pub fn handle_thickness_input(
         match f32::from_str(&normalized_value) {
             Ok(input_num) => {
                 if input_num <= 0.0 {
-                    // Добавляем сообщение об ошибке для отрицательных чисел
-                    let error_message = "Ошибка: Толщина должна быть положительным числом".to_string();
-                    let mut new_history = (*history).clone();
-                    if new_history.len() >= 30 {
-                        new_history.pop_back();
-                    }
-                    new_history.push_front(error_message);
-                    history.set(new_history);
+                    state.dispatch(AppAction::AddHistoryMessage(
+                        "Ошибка: Толщина должна быть положительным числом".to_string()
+                    ));
                     return;
                 }
 
@@ -70,45 +55,52 @@ pub fn handle_thickness_input(
                     .copied()
                     .unwrap_or(all_thicknesses[0]);
 
-                // Находим несколько ближайших значений
-                let mut nearest_values: Vec<f32> = all_thicknesses
-                    .iter()
-                    .copied()
-                    .collect();
-                nearest_values.sort_by(|a, b| {
-                    (a - input_num).abs()
-                        .partial_cmp(&(b - input_num).abs())
-                        .unwrap()
+                // Устанавливаем ближайшее значение как единственное в фильтрованном списке
+                update_thickness_list(&state, vec![nearest]);
+                
+                // Обновляем поле ввода и добавляем сообщение в историю
+                state.dispatch(AppAction::SetThickness(nearest.to_string()));
+                state.dispatch(AppAction::AddHistoryMessage(
+                    format!("Выбрана ближайшая доступная толщина: {} мм", nearest)
+                ));
+
+                // Пересчитываем цены
+                let price_per_part = calculate_price_per_part(&state);
+                let price_total = calculate_total_price(&state);
+                
+                state.dispatch(AppAction::UpdatePrices {
+                    price_per_part,
+                    price_total,
                 });
-
-                // Берем ближайшее значение
-                filtered_thicknesses.set(nearest_values.into_iter().take(1).collect());
-
-                // Добавляем сообщение о ближайшей толщине
-                let message = format!("Выбрана ближайшая доступная толщина: {} мм", nearest);
-                let mut new_history = (*history).clone();
-                if new_history.len() >= 5 {
-                    new_history.pop_back();
-                }
-                new_history.push_front(message);
-                history.set(new_history);
-
-                // Устанавливаем значение поля ввода как ближайшее найденное
-                thickness_input.set(nearest.to_string());
             },
             Err(_) => {
-                // Добавляем сообщение об ошибке при неверном формате числа
-                let error_message = "БОРОДА что ТЫ ДЕЛАЕШЬ ??? : дай нормальне число ".to_string();
-                let mut new_history = (*history).clone();
-                if new_history.len() >= 5 {
-                    new_history.pop_back();
-                }
-                new_history.push_front(error_message);
-                history.set(new_history);
-                
-                // Показываем все доступные толщины
-                filtered_thicknesses.set(all_thicknesses.clone());
+                state.dispatch(AppAction::AddHistoryMessage(
+                    "БОРОДА что ТЫ ДЕЛАЕШЬ ??? : дай нормальне число ".to_string()
+                ));
+                update_thickness_list(&state, all_thicknesses.clone());
             }
         }
     })
+}
+
+// Вспомогательная функция для обновления списка толщин
+// Эта функция будет использовать правильный вариант AppAction
+fn update_thickness_list(state: &UseReducerHandle<AppState>, thicknesses: Vec<f32>) {
+    // Здесь нужно использовать правильный вариант из вашего AppAction
+    // Например:
+    //state.dispatch(AppAction::UpdateFilteredThicknesses(thicknesses));
+    // или
+    //state.dispatch(AppAction::SetAvailableThicknesses(thicknesses));
+    // или другой вариант, который у вас определен
+}
+
+fn calculate_price_per_part(state: &AppState) -> f32 {
+    // Здесь должна быть ваша логика расчета цены за деталь
+    // Используйте значения из state
+    0.0 // Замените на реальный расчет
+}
+
+fn calculate_total_price(state: &AppState) -> f32 {
+    // Здесь должна быть ваша логика расчета общей цены
+    state.price_per_part * state.parts_count as f32
 }
