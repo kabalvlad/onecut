@@ -13,11 +13,5 @@ pub fn handle_clear_options(
         
         // Добавляем сообщение в историю
         state.dispatch(AppAction::AddHistoryMessage("Очищены поля ввода расчета стоимости".to_string()));
-        
-        // Обновляем цены - используем существующее действие UpdatePrices
-        state.dispatch(AppAction::UpdatePrices {
-            price_per_part: 0.0,
-            price_total: 0.0
-        });
     })
 }

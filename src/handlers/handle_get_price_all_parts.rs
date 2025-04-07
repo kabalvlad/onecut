@@ -1,6 +1,7 @@
 use wasm_bindgen::prelude::*;
 use wasm_bindgen_futures::spawn_local;
 use yew::prelude::*;
+use crate::models::{AppState, AppAction};
 
 #[wasm_bindgen]
 extern "C" {
@@ -20,12 +21,18 @@ pub async fn get_price_all_parts() -> Result<f32, String> {
 }
 
 // Обработчик для получения цены за все детали
-pub fn handle_get_price_all_parts(price_total: UseStateHandle<f32>) {
-    let price_total_clone = price_total.clone();
-    
-    spawn_local(async move {
-        if let Ok(price) = get_price_all_parts().await {
-            price_total_clone.set(price);
-        }
-    });
+pub fn handle_get_price_all_parts(state: UseReducerHandle<AppState>) -> Callback<()> {
+    Callback::from(move |_| {
+        let state_clone = state.clone();
+        
+        spawn_local(async move {
+            if let Ok(price) = get_price_all_parts().await {
+                // Обновляем только общую цену в состоянии
+                state_clone.dispatch(AppAction::UpdatePrices {
+                    price_per_part: state_clone.price_per_part, // Сохраняем текущую цену за деталь
+                    price_total: price, // Обновляем общую цену
+                });
+            }
+        });
+    })
 }

@@ -25,6 +25,12 @@ nalgebra = "0.33.2"
 splines = "4.4.2"
 glam = "0.30.0"
 kurbo = "0.11.1"
+log = "0.4"
+wasm-logger = "0.2"
+chrono = "0.4"
+
+
+
 
 
 

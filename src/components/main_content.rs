@@ -1,5 +1,7 @@
 use yew::prelude::*;
-use crate::models::{AppState, AppAction};
+use crate::models::AppState;
+
+
 
 #[derive(Properties, PartialEq)]
 pub struct Props {
@@ -8,7 +10,7 @@ pub struct Props {
     pub handle_cutting_type_change: Callback<Event>,
     pub handle_material_change: Callback<Event>,
     pub handle_thickness_input: Callback<Event>,
-    pub handle_thickness_select: Callback<Event>,
+    pub handle_thickness_select: Callback<Event>,    
     pub handle_clear_thickness: Callback<MouseEvent>,
     pub handle_cut_length_input: Callback<Event>,
     pub handle_bending_points_radio_change: Callback<Event>,
@@ -19,10 +21,13 @@ pub struct Props {
     pub handle_material_price_change: Callback<Event>,
     pub handle_margin_change: Callback<Event>,
     pub handle_clear_options: Callback<MouseEvent>,
+    pub handle_input_mode_change: Callback<String>,
+    pub handle_file_select    : Callback<Event>,
 }
 
 #[function_component(MainContent)]
 pub fn main_content(props: &Props) -> Html {
+        
     html! {
         <main class="container">
             <div class="main-content">
@@ -136,89 +141,114 @@ pub fn main_content(props: &Props) -> Html {
                         </div>
                     </div>
                 </div>
+/*----------------------------------------------------------------------------- */    
             
-                <div class="thickness-selector">
-                    <h2>{"Выберите толщину материала"}</h2>
-                    <div class="thickness-input-container">
-                        <input
-                            type="text"
-                            placeholder="Введите толщину в мм"
-                            value={props.state.thickness.clone()}
-                            onchange={props.handle_thickness_input.clone()}
-                        />
-                        <select onchange={props.handle_thickness_select.clone()}>
-                            <option value="">{"Выберите толщину"}</option>
-                            {
-                                props.all_thicknesses.iter().map(|&thickness| {
-                                    html! {
-                                        <option value={thickness.to_string()} selected={props.state.thickness == thickness.to_string()}>
-                                            {format!("{} мм", thickness)}
-                                        </option>
-                                    }
-                                }).collect::<Html>()
-                            }
-                        </select>
-                        <button onclick={props.handle_clear_thickness.clone()} class="clear-button">
-                            {"Очистить"}
-                        </button>
-                    </div>
-                </div>
-    
-                <div class="cut-length-section">
-                    <h2>{"Длина реза"}</h2>
-                    <div class="input-mode-selector">
-                        <label>
-                            <input 
-                                type="radio"
-                                name="input-mode"
-                                value="file"
-                                onclick={
-                                    let state = props.state.clone();
-                                    Callback::from(move |_| {
-                                        state.dispatch(AppAction::AddHistoryMessage("Выбран режим ввода: файл".to_string()));
-                                    })
-                                }
-                            />
-                            {"Выбрать файл"}
-                        </label>
-                        <label>
-                            <input 
-                                type="radio"
-                                name="input-mode"
-                                value="manual"
-                                onclick={
-                                    let state = props.state.clone();
-                                    Callback::from(move |_| {
-                                        state.dispatch(AppAction::AddHistoryMessage("Выбран режим ввода: ручной".to_string()));
-                                    })
-                                }
-                            />
-                            {"Ручной ввод"}
-                        </label>
-                    </div>
-                    <div class="file-input-container">
-                        <div class="manual-input-container">
+/* Новая объединенная секция для толщины и длины реза */
+                <div class="container-row">
+                    <div class="thickness-selector column">
+                        <h2>{"Выберите толщину материала"}</h2>
+                        <div class="thickness-input-container">
                             <input
                                 type="text"
-                                placeholder="Введите длину реза в мм"
-                                onchange={props.handle_cut_length_input.clone()}
+                                placeholder="Введите толщину в мм"
+                                value={props.state.thickness.clone()}
+                                onchange={props.handle_thickness_input.clone()}
                             />
-                        </div>
-                        <div class="cut-length-display">
-                            <span>{"Длина реза в мм: "}</span>
-                            <span>
+                            <select onchange={props.handle_thickness_select.clone()}>
+                                <option value="">{"Выберите толщину"}</option>
                                 {
-                                    if props.state.cut_length > 0.0 {
-                                        format!("{:.2} мм", props.state.cut_length)
-                                    } else {
-                                        "Не рассчитано".to_string()
-                                    }
+                                    props.all_thicknesses.iter().map(|&thickness| {
+                                        html! {
+                                            <option value={thickness.to_string()} selected={props.state.thickness == thickness.to_string()}>
+                                                {format!("{} мм", thickness)}
+                                            </option>
+                                        }
+                                    }).collect::<Html>()
                                 }
-                            </span>
+                            </select>
+                            <button onclick={props.handle_clear_thickness.clone()} class="clear-button">
+                                {"Очистить"}
+                            </button>
                         </div>
                     </div>
-                </div>
-    
+                
+                    <div class="cut-length-section column">
+                        <h2>{"Длина реза"}</h2>
+                        <div class="input-mode-selector">
+                            <label>
+                                <input 
+                                    type="radio"
+                                    name="input-mode"
+                                    value="file"
+                                    checked={props.state.is_file_selected}
+                                    onclick={
+                                        let handle_mode_change = props.handle_input_mode_change.clone();
+                                        Callback::from(move |_| {
+                                            handle_mode_change.emit("file".to_string());
+                                        })
+                                    }
+                                />
+                                {"Выбрать файл"}
+                            </label>
+                            <label>
+                                <input 
+                                    type="radio"
+                                    name="input-mode"
+                                    value="manual"
+                                    checked={props.state.is_manual_input}
+                                    onclick={
+                                        let handle_mode_change = props.handle_input_mode_change.clone();
+                                        Callback::from(move |_| {
+                                            handle_mode_change.emit("manual".to_string());
+                                        })
+                                    }
+                                />
+                                {"Ручной ввод"}
+                            </label>
+                        </div>
+                        <div class="file-input-container">
+                            {
+                                if props.state.is_file_selected {
+                                    html! {
+                                        <div class="file-input">
+                                            <input 
+                                                type="file" 
+                                                id="dxf-file" 
+                                                accept=".dxf"
+                                                onchange={props.handle_file_select.clone()}
+                                            />
+                                            <label for="dxf-file">{""}</label>
+                                        </div>
+                                    }
+                                } else {
+                                    html! {
+                                        <div class="manual-input-container">
+                                            <input
+                                                type="text"
+                                                placeholder="Введите длину реза в мм"
+                                                onchange={props.handle_cut_length_input.clone()}
+                                            />
+                                        </div>
+                                    }
+                                }
+                            }
+                            <div class="cut-length-display">
+                                <span>{"Длина реза в мм: "}</span>
+                                <span>
+                                    {
+                                        if props.state.cut_length > 0.0 {
+                                            format!("{:.2} мм", props.state.cut_length)
+                                        } else {
+                                            "Не рассчитано".to_string()
+                                        }
+                                    }
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>                
+                                   
+/*----------------------------------------------------------------------------- */        
                 <div class="bending-points-threads-inserts-mats-section">
                     <div class="section-columns">
                         <div class="section-column">
@@ -298,6 +328,7 @@ pub fn main_content(props: &Props) -> Html {
                         </div>
                     </div>
                 </div>
+/*----------------------------------------------------------------------------- */    
     
                 <div class="section-other-options">
                     <div class="options-row">
@@ -352,16 +383,21 @@ pub fn main_content(props: &Props) -> Html {
                     </div>                    
                 </div>
             </div>
+/*----------------------------------------------------------------------------- */    
             
             <div class="info-box">
                 <h2>{"Информация"}</h2>
                 <div class="history-list">
                     {
-                        props.state.history.iter().map(|message| {
-                            html! {
-                                <p>{message}</p>
-                            }
-                        }).collect::<Html>()
+                        if props.state.history.is_empty() {
+                            html! { <p class="empty-history">{"История пуста"}</p> }
+                        } else {
+                            props.state.history.iter().map(|message| {
+                                html! {
+                                    <p key={message.clone()}>{message}</p>
+                                }
+                            }).collect::<Html>()
+                        }
                     }
                 </div>
             </div>

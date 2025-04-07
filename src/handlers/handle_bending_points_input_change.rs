@@ -4,6 +4,7 @@ use serde::{Serialize, Deserialize};
 use web_sys::{Event, HtmlInputElement};
 use wasm_bindgen::prelude::wasm_bindgen;
 use crate::models::{AppState, AppAction};
+use std::str::FromStr;
 
 #[derive(Serialize, Deserialize)]
 pub struct SetBendingPointsArgs {
@@ -20,40 +21,62 @@ pub fn handle_bending_points_input_change(
     state: UseReducerHandle<AppState>,
 ) -> Callback<Event> {
     Callback::from(move |e: Event| {
-        let target = e.target_dyn_into::<HtmlInputElement>().unwrap();
-        let value = target.value();
+        let input = e.target_dyn_into::<HtmlInputElement>().unwrap();
+        let value = input.value();
         
-        if let Ok(points) = value.parse::<i32>() {
-            // Обновляем состояние через dispatch
-            state.dispatch(AppAction::SetBendingPoints {
-                enabled: true,
-                count: Some(points)
-            });
-            
-            // Создаем сообщение об успешном вводе
-            let message = format!("Установлено количество точек гиба: {}", points);
-            state.dispatch(AppAction::AddHistoryMessage(message));
+        // Если значение пустое, просто выходим
+        if value.trim().is_empty() {
+            return;
+        }
+        
+        // Нормализуем значение, заменяя запятые на точки
+        let normalized_value = value.replace(',', ".");
+        
+        match i32::from_str(&normalized_value) {
+            Ok(points) => {
+                if points >= 0 {
+                    // Обновляем количество точек сгиба через dispatch
+                    state.dispatch(AppAction::SetBendingPoints { 
+                        enabled: true, 
+                        count: Some(points) 
+                    });
+                    
+                    // Сразу выводим сообщение о установке точек сгиба
+                    state.dispatch(AppAction::AddHistoryMessage(
+                        format!("Установлено количество точек сгиба: {}", points)
+                    ));
 
-            // Отправляем данные на бэкенд
-            let args = SetBendingPointsArgs {
-                bending_points: points,
-            };
-
-            wasm_bindgen_futures::spawn_local(async move {
-                let args = serde_wasm_bindgen::to_value(&args).unwrap();
-                let _ = invoke("set_bending_points", args).await;
-            });
-            
-            // Обновляем цены через существующее действие
-            state.dispatch(AppAction::UpdatePrices {
-                price_per_part: 0.0,
-                price_total: 0.0
-            });
-        } else {
-            // Обработка ошибки
-            state.dispatch(AppAction::AddHistoryMessage(
-                "Ошибка: введите корректное целое число для количества точек гиба".to_string()
-            ));
+                    // Отправляем данные на бэкенд
+                    let args = SetBendingPointsArgs { bending_points: points };
+                    let state_clone = state.clone();
+                    
+                    wasm_bindgen_futures::spawn_local(async move {
+                        let args = match serde_wasm_bindgen::to_value(&args) {
+                            Ok(args) => args,
+                            Err(_) => {
+                                state_clone.dispatch(AppAction::AddHistoryMessage(
+                                    "Ошибка: не удалось сериализовать данные для отправки".to_string()
+                                ));
+                                return;
+                            }
+                        };
+                        
+                        // Просто вызываем бэкенд без дополнительных сообщений об успехе
+                        let _ = invoke("set_bending_points", args).await;
+                    });
+                } else {
+                    // Отрицательное значение
+                    state.dispatch(AppAction::AddHistoryMessage(
+                        "Ошибка: количество точек сгиба не может быть отрицательным".to_string()
+                    ));
+                }
+            },
+            Err(_) => {
+                // Некорректное числовое значение
+                state.dispatch(AppAction::AddHistoryMessage(
+                    format!("Ошибка: '{}' не является корректным числовым значением", value)
+                ));
+            }
         }
     })
 }

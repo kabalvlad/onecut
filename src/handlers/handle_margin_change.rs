@@ -20,8 +20,6 @@ pub fn handle_margin_change(
     state: UseReducerHandle<AppState>,
 ) -> Callback<Event> {
     Callback::from(move |e: Event| {
-        e.prevent_default();
-        
         let input: HtmlInputElement = e.target_unchecked_into();
         let value_str = input.value();
         
@@ -44,47 +42,25 @@ pub fn handle_margin_change(
         // Обновляем значение в поле ввода
         input.set_value(&value.to_string());
         
+        // Обновляем состояние
+        state.dispatch(AppAction::SetMargin(value));
+        
+        // Добавляем сообщение в историю
+        state.dispatch(AppAction::AddHistoryMessage(
+            format!("Маржа {}% установлена", value)
+        ));
+        
         // Отправляем новое значение маржи на бэкенд
         let margin_value = value as f32;
-        let state_clone = state.clone();
         
         spawn_local(async move {
-            let args = MarginArgs { margin: margin_value };
-            let args = serde_wasm_bindgen::to_value(&args).unwrap();
+            let args = match serde_wasm_bindgen::to_value(&MarginArgs { margin: margin_value }) {
+                Ok(args) => args,
+                Err(_) => return, // Просто выходим в случае ошибки сериализации
+            };
             
-            match invoke("set_margin_deal", args).await {
-                result if !result.is_undefined() => {
-                    state_clone.dispatch(AppAction::SetMargin(value));
-                    state_clone.dispatch(AppAction::AddHistoryMessage(
-                        format!("Маржа {}% установлена", margin_value)
-                    ));
-                    
-                    // Пересчитываем цены
-                    // Предполагается, что у вас есть соответствующие действия для обновления цен
-                    state_clone.dispatch(AppAction::UpdatePrices {
-                        price_per_part: calculate_price_per_part(&state_clone),
-                        price_total: calculate_total_price(&state_clone),
-                    });
-                },
-                _ => {
-                    state_clone.dispatch(AppAction::AddHistoryMessage(
-                        format!("Ошибка при установке маржи {}%", margin_value)
-                    ));
-                }
-            }
+            // Просто вызываем бэкенд без дополнительных сообщений об успехе
+            let _ = invoke("set_margin_deal", args).await;
         });
     })
-}
-
-// Вспомогательные функции для расчета цен
-fn calculate_price_per_part(state: &AppState) -> f32 {
-    // Здесь ваша логика расчета цены за одну деталь
-    // Используйте значения из state
-    0.0 // Замените на реальный расчет
-}
-
-fn calculate_total_price(state: &AppState) -> f32 {
-    // Здесь ваша логика расчета общей цены
-    // Используйте значения из state
-    0.0 // Замените на реальный расчет
 }

@@ -23,68 +23,52 @@ pub fn handle_threads_inserts_mats_input_change(
         let target = e.target_dyn_into::<HtmlInputElement>().unwrap();
         let value = target.value();
         
-        // Парсим значение в i32 для обновления состояния
-        let parsed_value = value.parse::<i32>().ok();
-        
-        // Обновляем значение в поле ввода
-        state.dispatch(AppAction::SetThreadsInsertsMats { 
-            enabled: true, 
-            count: parsed_value 
-        });
+        // Если значение пустое, просто выходим
+        if value.trim().is_empty() {
+            return;
+        }
 
-        if let Some(point) = parsed_value {
-            // Создаем сообщение об успешном вводе
-            let message = format!("Установлено количество резьбы/вставок/цековок: {}", point);
-            
-            // Обновляем историю
-            state.dispatch(AppAction::AddHistoryMessage(message));
+        match value.parse::<i32>() {
+            Ok(points) => {
+                if points >= 0 {
+                    // Обновляем количество точек через dispatch
+                    state.dispatch(AppAction::SetThreadsInsertsMats { 
+                        enabled: true, 
+                        count: Some(points) 
+                    });
+                    
+                    // Сразу выводим сообщение о установке точек
+                    state.dispatch(AppAction::AddHistoryMessage(
+                        format!("Установлено количество резьбы/вставок/цековок: {}", points)
+                    ));
 
-            // Отправляем данные на бэкенд
-            let args = SetThreadsInsertsMatsArgs {
-                threads_inserts_mats: point,
-            };
-
-            let state_clone = state.clone();
-            wasm_bindgen_futures::spawn_local(async move {
-                let args = serde_wasm_bindgen::to_value(&args).unwrap();
-                let _ = invoke("set_threads_inserts_mats", args).await;
-                
-                // После отправки данных на бэкенд, обновляем цены
-                calculate_and_update_prices(&state_clone);
-            });
-        } else {
-            // Обработка ошибки только если строка не пустая
-            if !value.trim().is_empty() {
+                    // Отправляем данные на бэкенд
+                    let args = SetThreadsInsertsMatsArgs { 
+                        threads_inserts_mats: points 
+                    };
+                    
+                    wasm_bindgen_futures::spawn_local(async move {
+                        let args = match serde_wasm_bindgen::to_value(&args) {
+                            Ok(args) => args,
+                            Err(_) => return, // Просто выходим в случае ошибки сериализации
+                        };
+                        
+                        // Просто вызываем бэкенд без дополнительных сообщений об успехе
+                        let _ = invoke("set_threads_inserts_mats", args).await;
+                    });
+                } else {
+                    // Отрицательное значение
+                    state.dispatch(AppAction::AddHistoryMessage(
+                        "Ошибка: количество резьбы/вставок/цековок не может быть отрицательным".to_string()
+                    ));
+                }
+            },
+            Err(_) => {
+                // Некорректное числовое значение
                 state.dispatch(AppAction::AddHistoryMessage(
-                    "Ошибка: введите корректное целое число для количества резьбы/вставок/цековок".to_string()
+                    format!("Ошибка: '{}' не является корректным числовым значением", value)
                 ));
             }
         }
     })
-}
-
-// Вспомогательная функция для расчета и обновления цен
-fn calculate_and_update_prices(state: &UseReducerHandle<AppState>) {
-    // Расчет цены за одну деталь
-    let price_per_part = calculate_price_per_part(&state);
-    
-    // Расчет общей цены
-    let price_total = calculate_total_price(&state, price_per_part);
-    
-    // Обновление цен в состоянии
-    state.dispatch(AppAction::UpdatePrices {
-        price_per_part,
-        price_total,
-    });
-}
-
-fn calculate_price_per_part(state: &AppState) -> f32 {
-    // Здесь должна быть ваша логика расчета цены за деталь
-    // Используйте значения из state
-    0.0 // Замените на реальный расчет
-}
-
-fn calculate_total_price(state: &AppState, price_per_part: f32) -> f32 {
-    // Здесь должна быть ваша логика расчета общей цены
-    price_per_part * state.parts_count as f32
 }

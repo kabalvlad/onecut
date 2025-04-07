@@ -3,13 +3,8 @@ use wasm_bindgen::JsCast;
 use yew::prelude::*;
 use wasm_bindgen::prelude::*;
 use serde::{Serialize, Deserialize};
+use wasm_bindgen_futures::spawn_local;
 use crate::models::{AppState, AppAction};
-
-//=======================================================================================================================
-
-// Обработчик выбора толщины
-
-//=======================================================================================================================
 
 #[wasm_bindgen]
 extern "C" {
@@ -23,64 +18,64 @@ pub struct SetThicknessArgs {
 }
 
 pub fn handle_thickness_select(
-    state: UseReducerHandle<AppState>,
+    state: UseReducerHandle<AppState>,    
 ) -> Callback<Event> {
     Callback::from(move |e: Event| {
         if let Some(target) = e.target() {
-            let select = target.dyn_into::<web_sys::HtmlSelectElement>().unwrap();
-            let value = select.value();
-            
-            // Преобразуем строковое значение в число
-            if let Ok(thickness) = value.parse::<f32>() {
-                // Обновляем значение в поле ввода
-                state.dispatch(AppAction::SetThickness(thickness.to_string()));
+            if let Ok(select) = target.dyn_into::<web_sys::HtmlSelectElement>() {
+                let value = select.value();
                 
-                // Обновляем отфильтрованные толщины
-                // Предполагаем, что у вас есть действие для обновления списка толщин
-                // Используем вспомогательную функцию для обновления списка толщин
-                update_filtered_thicknesses(&state, vec![thickness]);
-                
-                // Добавляем сообщение в историю
-                let message = format!("Выбрана толщина: {} мм", thickness);
-                state.dispatch(AppAction::AddHistoryMessage(message));
-                
-                // Обновляем цены
-                calculate_and_update_prices(&state);
+                if let Ok(thickness) = value.parse::<f32>() {
+                    // Устанавливаем толщину в состояние
+                    state.dispatch(AppAction::SetThickness(thickness.to_string()));
+                    
+                    // Сообщаем об установке толщины
+                    state.dispatch(AppAction::AddHistoryMessage(
+                        format!("Установлена толщина: {} мм", thickness)
+                    ));
+                    
+                    // Проверяем, доступен ли Tauri API
+                    let is_tauri_available = web_sys::window()
+                        .and_then(|win| js_sys::Reflect::get(&win, &JsValue::from_str("__TAURI__")).ok())
+                        .map(|tauri| !tauri.is_undefined() && !tauri.is_null())
+                        .unwrap_or(false);
+                    
+                    if is_tauri_available {
+                        // Отправляем значение в backend только если Tauri доступен
+                        let args = SetThicknessArgs { thickness };
+                        let state_clone = state.clone();
+                        
+                        spawn_local(async move {
+                            match serde_wasm_bindgen::to_value(&args) {
+                                Ok(args_js) => {
+                                    let result = invoke("set_thickness", args_js).await;
+                                    if result.is_undefined() {
+                                        // Логируем ошибку в консоль
+                                        web_sys::console::error_1(
+                                            &format!("Ошибка записи толщины {} мм в backend", thickness).into()
+                                        );
+                                        // Отправляем сообщение об ошибке
+                                        state_clone.dispatch(AppAction::AddHistoryMessage(
+                                            format!("Ошибка: не удалось установить толщину {} мм в системе", thickness)
+                                        ));
+                                    }
+                                },
+                                Err(e) => {
+                                    web_sys::console::error_1(
+                                        &format!("Ошибка сериализации данных: {:?}", e).into()
+                                    );
+                                }
+                            }
+                        });
+                    } else {
+                        // Если Tauri недоступен, просто выводим сообщение
+                        web_sys::console::log_1(&"Tauri API недоступен, работаем в режиме веб-приложения".into());
+                        state.dispatch(AppAction::AddHistoryMessage(
+                            format!("Толщина {} мм установлена (режим веб-приложения)", thickness)
+                        ));
+                    }
+                }
             }
         }
     })
-}
-
-// Вспомогательная функция для обновления списка толщин
-fn update_filtered_thicknesses(state: &UseReducerHandle<AppState>, thicknesses: Vec<f32>) {
-    // Здесь нужно использовать правильный вариант из вашего AppAction
-    // Например:
-    //state.dispatch(AppAction::UpdateFilteredThicknesses(thicknesses));
-    // Замените на правильное имя действия из вашего AppAction
-}
-
-// Вспомогательная функция для расчета и обновления цен
-fn calculate_and_update_prices(state: &UseReducerHandle<AppState>) {
-    // Расчет цены за одну деталь
-    let price_per_part = calculate_price_per_part(&state);
-    
-    // Расчет общей цены
-    let price_total = calculate_total_price(&state, price_per_part);
-    
-    // Обновление цен в состоянии
-    state.dispatch(AppAction::UpdatePrices {
-        price_per_part,
-        price_total,
-    });
-}
-
-fn calculate_price_per_part(state: &AppState) -> f32 {
-    // Здесь должна быть ваша логика расчета цены за деталь
-    // Используйте значения из state
-    0.0 // Замените на реальный расчет
-}
-
-fn calculate_total_price(state: &AppState, price_per_part: f32) -> f32 {
-    // Здесь должна быть ваша логика расчета общей цены
-    price_per_part * state.parts_count as f32
 }

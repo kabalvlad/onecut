@@ -2,8 +2,12 @@ use web_sys::{Event, HtmlInputElement};
 use yew::prelude::*;
 use wasm_bindgen::prelude::*;
 use serde::{Serialize, Deserialize};
-use crate::models::{AppState, AppAction};
 use wasm_bindgen_futures::spawn_local;
+use crate::models::{AppState, AppAction};
+
+//===============================================================
+// Обработчик для выбора типа резки
+//===============================================================
 
 #[wasm_bindgen]
 extern "C" {
@@ -12,57 +16,31 @@ extern "C" {
 }
 
 #[derive(Serialize, Deserialize)]
-pub struct SetMaterialArgs {
-    pub material_type: String,
+pub struct SetTypeCuttingArgs {
+    pub cutting_type: String,
 }
 
-// Структура для хранения информации о материалах
-struct MaterialInfo {
-    code: &'static str,
-    description: &'static str,
-}
-
-pub fn handle_material_change(
+pub fn handle_cutting_type_change(
     state: UseReducerHandle<AppState>,
 ) -> Callback<Event> {
     Callback::from(move |e: Event| {
         let target = e.target_dyn_into::<HtmlInputElement>().unwrap();
         let value = target.value();
         
-        // Получаем информацию о материале
-        let material_info = match value.as_str() {
-            "aluminum" => MaterialInfo { 
-                code: "AL", 
-                description: "Алюминий" 
-            },
-            "steel" => MaterialInfo { 
-                code: "ST", 
-                description: "Сталь" 
-            },
-            "stainless" => MaterialInfo { 
-                code: "SS", 
-                description: "Нержавеющая сталь" 
-            },
-            "copper" => MaterialInfo { 
-                code: "COP", 
-                description: "Латунь/Бронза/Медь" 
-            },
-            "plastic" => MaterialInfo { 
-                code: "PLA", 
-                description: "Пластик" 
-            },
-            _ => MaterialInfo { 
-                code: "", 
-                description: "материал" 
-            },
+        // Получаем код и описание типа резки
+        let (cutting_code, cutting_description) = match value.as_str() {
+            "laser" => ("LC", "Лазерная резка"),
+            "plasma" => ("PC", "Плазменная резка"),
+            "hydro" => ("HC", "Гидроабразивная резка"),
+            _ => ("", "Неизвестный тип резки"),
         };
-
-        // Обновляем состояние через редуктор
-        state.dispatch(AppAction::SetMaterial(value.clone()));
+        
+        // Обновляем выбранный тип резки через редуктор
+        state.dispatch(AppAction::SetCuttingType(value.clone()));
         state.dispatch(AppAction::AddHistoryMessage(
-            format!("Выбран материал: {}", material_info.description)
+            format!("Выбран тип резки: {}", cutting_description)
         ));
-
+        
         // Проверяем, доступен ли Tauri API
         let is_tauri_available = web_sys::window()
             .and_then(|win| js_sys::Reflect::get(&win, &JsValue::from_str("__TAURI__")).ok())
@@ -70,24 +48,24 @@ pub fn handle_material_change(
             .unwrap_or(false);
         
         if is_tauri_available {
-            // Отправляем информацию о материале на бэкенд через Tauri
-            let args = SetMaterialArgs {
-                material_type: material_info.code.to_string(),
+            // Отправляем информацию о типе резки на бэкенд через Tauri
+            let args = SetTypeCuttingArgs {
+                cutting_type: cutting_code.to_string(),
             };
             let state_clone = state.clone();
             
             spawn_local(async move {
                 match serde_wasm_bindgen::to_value(&args) {
                     Ok(args_js) => {
-                        let result = invoke("set_type_material", args_js).await;
+                        let result = invoke("set_type_cutting", args_js).await;
                         if result.is_undefined() {
                             // Логируем ошибку в консоль
                             web_sys::console::error_1(
-                                &format!("Ошибка при установке материала {} в backend", args.material_type).into()
+                                &format!("Ошибка при установке типа резки {} в backend", cutting_code).into()
                             );
                             // Отправляем сообщение об ошибке
                             state_clone.dispatch(AppAction::AddHistoryMessage(
-                                format!("Ошибка: не удалось установить материал {} в системе", args.material_type)
+                                format!("Ошибка: не удалось установить тип резки {} в системе", cutting_description)
                             ));
                         }
                     },
@@ -102,7 +80,7 @@ pub fn handle_material_change(
             // Если Tauri недоступен, просто выводим сообщение
             web_sys::console::log_1(&"Tauri API недоступен, работаем в режиме веб-приложения".into());
             state.dispatch(AppAction::AddHistoryMessage(
-                format!("Материал {} установлен (режим веб-приложения)", material_info.description)
+                format!("Тип резки {} установлен (режим веб-приложения)", cutting_description)
             ));
         }
     })

@@ -29,9 +29,6 @@ pub fn handle_threads_inserts_mats_radio_change(
             state.dispatch(AppAction::AddHistoryMessage(
                 "Выбрано: Нет резьбы, вставок и цековок".to_string()
             ));
-            state.dispatch(AppAction::AddHistoryMessage(
-                "Установлено количество резьбы/вставок/цековок: 0".to_string()
-            ));
             
             // Устанавливаем значение поля ввода в 0
             state.dispatch(AppAction::SetThreadsInsertsMats { 
@@ -39,18 +36,24 @@ pub fn handle_threads_inserts_mats_radio_change(
                 count: Some(0) 
             });
             
+            // Добавляем сообщение о количестве
+            state.dispatch(AppAction::AddHistoryMessage(
+                "Установлено количество резьбы/вставок/цековок: 0".to_string()
+            ));
+            
             // Отправляем данные на бэкенд
             let args = SetThreadsInsertsMatsArgs {
                 threads_inserts_mats: 0,
             };
 
-            let state_clone = state.clone();
             wasm_bindgen_futures::spawn_local(async move {
-                let args = serde_wasm_bindgen::to_value(&args).unwrap();
-                let _ = invoke("set_threads_inserts_mats", args).await;
+                let args = match serde_wasm_bindgen::to_value(&args) {
+                    Ok(args) => args,
+                    Err(_) => return, // Просто выходим в случае ошибки сериализации
+                };
                 
-                // После отправки данных на бэкенд, обновляем цены
-                calculate_and_update_prices(&state_clone);
+                // Просто вызываем бэкенд без дополнительных сообщений об успехе
+                let _ = invoke("set_threads_inserts_mats", args).await;
             });
         } else {
             // Обновляем историю для выбора "Да"
@@ -63,35 +66,6 @@ pub fn handle_threads_inserts_mats_radio_change(
                 enabled: true, 
                 count: None 
             });
-            
-            // Обновляем цены
-            calculate_and_update_prices(&state);
         }
     })
-}
-
-// Вспомогательная функция для расчета и обновления цен
-fn calculate_and_update_prices(state: &UseReducerHandle<AppState>) {
-    // Расчет цены за одну деталь
-    let price_per_part = calculate_price_per_part(&state);
-    
-    // Расчет общей цены
-    let price_total = calculate_total_price(&state, price_per_part);
-    
-    // Обновление цен в состоянии
-    state.dispatch(AppAction::UpdatePrices {
-        price_per_part,
-        price_total,
-    });
-}
-
-fn calculate_price_per_part(state: &AppState) -> f32 {
-    // Здесь должна быть ваша логика расчета цены за деталь
-    // Используйте значения из state
-    0.0 // Замените на реальный расчет
-}
-
-fn calculate_total_price(state: &AppState, price_per_part: f32) -> f32 {
-    // Здесь должна быть ваша логика расчета общей цены
-    price_per_part * state.parts_count as f32
 }

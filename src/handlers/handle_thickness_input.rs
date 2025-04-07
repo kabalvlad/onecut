@@ -1,7 +1,21 @@
 use web_sys::{Event, HtmlInputElement};
 use yew::prelude::*;
+use wasm_bindgen::prelude::*;
+use serde::{Serialize, Deserialize};
 use std::str::FromStr;
 use crate::models::{AppState, AppAction};
+use wasm_bindgen_futures::spawn_local;
+
+#[wasm_bindgen]
+extern "C" {
+    #[wasm_bindgen(js_namespace = ["window", "__TAURI__", "tauri"])]
+    async fn invoke(cmd: &str, args: JsValue) -> JsValue;
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct SetThicknessArgs {
+    pub thickness: f32,
+}
 
 pub fn handle_thickness_input(
     state: UseReducerHandle<AppState>,
@@ -14,11 +28,8 @@ pub fn handle_thickness_input(
         // Обновляем значение поля ввода
         state.dispatch(AppAction::SetThickness(value.clone()));
         
-        // Если строка пустая, показываем все толщины
+        // Если строка пустая, просто выходим
         if value.trim().is_empty() {
-            // Используем существующий вариант для обновления списка толщин
-            // Предполагаем, что у вас есть действие для обновления списка толщин
-            update_thickness_list(&state, all_thicknesses.clone());
             return;
         }
 
@@ -30,7 +41,6 @@ pub fn handle_thickness_input(
             state.dispatch(AppAction::AddHistoryMessage(
                 "Ошибка: Пожалуйста, введите только числовое значение толщины без посторонних символов".to_string()
             ));
-            update_thickness_list(&state, all_thicknesses.clone());
             return;
         }
 
@@ -54,9 +64,6 @@ pub fn handle_thickness_input(
                     })
                     .copied()
                     .unwrap_or(all_thicknesses[0]);
-
-                // Устанавливаем ближайшее значение как единственное в фильтрованном списке
-                update_thickness_list(&state, vec![nearest]);
                 
                 // Обновляем поле ввода и добавляем сообщение в историю
                 state.dispatch(AppAction::SetThickness(nearest.to_string()));
@@ -64,43 +71,47 @@ pub fn handle_thickness_input(
                     format!("Выбрана ближайшая доступная толщина: {} мм", nearest)
                 ));
 
-                // Пересчитываем цены
-                let price_per_part = calculate_price_per_part(&state);
-                let price_total = calculate_total_price(&state);
-                
-                state.dispatch(AppAction::UpdatePrices {
-                    price_per_part,
-                    price_total,
-                });
+                // Проверяем доступность Tauri API
+                let is_tauri_available = web_sys::window()
+                    .and_then(|win| js_sys::Reflect::get(&win, &JsValue::from_str("__TAURI__")).ok())
+                    .map(|tauri| !tauri.is_undefined() && !tauri.is_null())
+                    .unwrap_or(false);
+
+                if is_tauri_available {
+                    // Отправляем значение в backend через Tauri
+                    let args = SetThicknessArgs { thickness: nearest };
+                    let state_clone = state.clone();
+
+                    spawn_local(async move {
+                        match serde_wasm_bindgen::to_value(&args) {
+                            Ok(args_js) => {
+                                let result = invoke("set_thickness", args_js).await;
+                                if result.is_undefined() {
+                                    web_sys::console::error_1(
+                                        &format!("Ошибка при установке толщины {} мм в backend", nearest).into()
+                                    );
+                                    state_clone.dispatch(AppAction::AddHistoryMessage(
+                                        format!("Ошибка: не удалось установить толщину {} мм в системе", nearest)
+                                    ));
+                                }
+                            },
+                            Err(e) => {
+                                web_sys::console::error_1(
+                                    &format!("Ошибка сериализации данных: {:?}", e).into()
+                                );
+                            }
+                        }
+                    });
+                } else {
+                    // Если Tauri недоступен, выводим сообщение
+                    web_sys::console::log_1(&"Tauri API недоступен, работаем в режиме веб-приложения".into());
+                }
             },
             Err(_) => {
                 state.dispatch(AppAction::AddHistoryMessage(
                     "БОРОДА что ТЫ ДЕЛАЕШЬ ??? : дай нормальне число ".to_string()
                 ));
-                update_thickness_list(&state, all_thicknesses.clone());
             }
         }
     })
-}
-
-// Вспомогательная функция для обновления списка толщин
-// Эта функция будет использовать правильный вариант AppAction
-fn update_thickness_list(state: &UseReducerHandle<AppState>, thicknesses: Vec<f32>) {
-    // Здесь нужно использовать правильный вариант из вашего AppAction
-    // Например:
-    //state.dispatch(AppAction::UpdateFilteredThicknesses(thicknesses));
-    // или
-    //state.dispatch(AppAction::SetAvailableThicknesses(thicknesses));
-    // или другой вариант, который у вас определен
-}
-
-fn calculate_price_per_part(state: &AppState) -> f32 {
-    // Здесь должна быть ваша логика расчета цены за деталь
-    // Используйте значения из state
-    0.0 // Замените на реальный расчет
-}
-
-fn calculate_total_price(state: &AppState) -> f32 {
-    // Здесь должна быть ваша логика расчета общей цены
-    state.price_per_part * state.parts_count as f32
 }
