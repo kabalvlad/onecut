@@ -2,20 +2,15 @@
 /* Основной контейнер всего приложения */
 .container {
     display: flex;           /* Включаем flexbox для основного контейнера */
-    gap: 30px;               /* Расстояние между элементами */
+    flex-direction: column;  /* Меняем на вертикальное расположение */
     max-width: 1400px;       /* Максимальная ширина контейнера */
     margin: 0 auto;          /* Центрирование контейнера */
-    padding: 20px;           /* Внутренние отступы */
+    padding: 0px;           /* Внутренние отступы */
     font-family: Arial, sans-serif; /* Основной шрифт */
     position: relative;      /* Для корректного позиционирования дочерних элементов */
     min-height: 100vh;       /* Минимальная высота - полная высота экрана */
-}
-
-/* Основное содержимое (левая часть) */
-.main-content {
-    flex: 0 0 60%;           /* Размер: не сжимается, не растягивается, базовый размер 60% */
-    max-width: 800px;        /* Максимальная ширина */
-    margin-right: 400px;     /* Отступ справа для размещения боковой панели */
+    box-sizing: border-box;  /* Учитываем padding в общей ширине */
+    gap: 0px;               /* Уменьшенное расстояние между рядами */
 }
 
 /* ===== ЗАГОЛОВКИ ===== */
@@ -23,207 +18,194 @@
 h1 {
     text-align: center;      /* Центрирование текста */
     color: #333;             /* Цвет текста */
-    margin-bottom: 30px;     /* Отступ снизу */
+    margin-bottom: 10px;     /* Уменьшенный отступ снизу */
+    font-size: 24px;         /* Размер шрифта */
 }
 
-/* Подзаголовки */
-h2 {
-    color: #444;             /* Цвет текста */
-    margin-bottom: 20px;     /* Отступ снизу */
-}
-
-/* ===== КОНТЕЙНЕР-СТРОКА ДЛЯ РАЗМЕЩЕНИЯ СЕКЦИЙ В ОДНУ СТРОКУ ===== */
-/* Используется для типов резки и материалов, толщины и длины реза */
-.container-row {
+/* ===== РЯДЫ ===== */
+/* Первый ряд: два блока рядом */
+.row-1 {
     display: flex;           /* Flexbox для горизонтального выравнивания */
-    flex-direction: row;     /* Элементы в строку */
-    justify-content: space-between; /* Распределение пространства */
+    gap: 20px;               /* Расстояние между блоками */
     width: 100%;             /* Полная ширина */
-    gap: 20px;               /* Расстояние между колонками */
-    margin-bottom: 20px;     /* Отступ снизу */
+    margin-bottom: 10px;     /* Уменьшенный отступ снизу */
 }
 
-/* Стиль для колонок в контейнере-строке */
-.column {
-    flex: 1;                 /* Каждая колонка занимает равное пространство */
-    min-width: 0;            /* Предотвращает переполнение */
-    padding: 20px;           /* Внутренние отступы */
-    background: #f8f9fa;     /* Светло-серый фон */
+/* Второй ряд: четыре секции в одной строке */
+.row-2 {
+    display: flex;           /* Flexbox для горизонтального выравнивания */
+    gap: 10px;               /* Расстояние между элементами (такое же, как в row-1) */
+    width: 100%;             /* Полная ширина */
+    justify-content: space-between; /* Распределение пространства для выравнивания под блоками первого ряда */
+    margin-bottom: 0px;     /* Уменьшенный отступ снизу */
+    flex-wrap: nowrap;       /* Запрещаем перенос на новую строку */
+}
+
+/* ===== ОБЩИЕ СТИЛИ ДЛЯ ВСЕХ БЛОКОВ ===== */
+/* Все блоки в приложении */
+ 
+.cutting-types, .material-types, .thickness-selector, .cut-length-section,
+.bending-section, .threads-section, .other-options  {
+    background: #f8f9fa;     /* Светло-серый фон для всех блоков */
     border-radius: 8px;      /* Скругленные углы */
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1); /* Тень для глубины */
-    display: flex;           /* Flexbox для внутренней структуры */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.293); /* Тень для глубины */
+    padding: 10px;           /* Внутренние отступы */
+    display: flex;           /* Включаем flexbox для центрирования */
     flex-direction: column;  /* Элементы в столбец */
+    justify-content: flex-start; /* Выравнивание по верхнему краю */
+    align-items: center;     /* Центрирование по горизонтали */
+    box-sizing: border-box;  /* Учитываем padding в общей ширине */
+    position: relative;      /* Для корректного позиционирования */
 }
 
-/* Заголовки в колонках */
-.column h2 {
-    margin-top: 0;           /* Убираем отступ сверху */
-    margin-bottom: 15px;     /* Отступ снизу */
+/* Блоки в первом ряду */
+.block-left, .block-right {
+    flex: 1;                 /* Занимают равное пространство */
+    min-height: 200px;       /* Минимальная высота для блоков первого ряда */
+}
+
+/* Блоки во втором ряду */
+.bending-section, .threads-section, .other-options, .results-section {
+    flex: 1;                 /* Занимают равное пространство */
+    min-height: 150px;       /* Минимальная высота для блоков второго ряда */
+}
+
+/* Колонки внутри блоков */
+.cutting-types, .material-types, .thickness-selector, .cut-length-section {
+    flex: 1;                 /* Занимают равное пространство */
+    height: 100%;            /* Полная высота */
+}
+
+/* Строка внутри блоков для горизонтального расположения элементов */
+.block-row {
+    display: flex;           /* Flexbox для горизонтального выравнивания */
+    gap: 20px;               /* Расстояние между элементами */
+    width: 100%;             /* Полная ширина */
+    justify-content: center; /* Центрирование по горизонтали */
+    align-items: flex-start; /* Выравнивание по верхнему краю */
+    height: 100%;            /* Полная высота */
+}
+
+/* ===== ЗАГОЛОВКИ БЛОКОВ ===== */
+/* Все заголовки в блоках */
+.cutting-types h2, .material-types h2, .thickness-selector h2, .cut-length-section h2,
+.bending-section h2, .threads-section h2, .other-options h2 {
+    text-align: center;      /* Центрирование текста */
+    margin: 0 0 15px 0;      /* Отступы: верх, право, низ, лево */
+    height: 30px;            /* Фиксированная высота для всех заголовков */
+    display: flex;           /* Flexbox для центрирования */
+    align-items: center;     /* Центрирование по вертикали */
+    justify-content: center; /* Центрирование по горизонтали */
+    width: 100%;             /* Полная ширина */
     font-size: 1.2rem;       /* Размер шрифта */
     color: #333;             /* Цвет текста */
-    text-align: center;      /* Центрирование текста */
+    border-bottom: 3px solid #c43535; /* Тонкая линия снизу */
+    padding-bottom: 5px;     /* Отступ снизу */
+    position: relative;      /* Для корректного позиционирования */
+    padding: 14px;
 }
 
-/* ===== СЕКЦИЯ ТИПОВ РЕЗКИ ===== */
-/* Контейнер для типов резки */
-.cutting-types {
-    background: #f8f9fa;     /* Светло-серый фон */
-    border-radius: 8px;      /* Скругленные углы */
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1); /* Тень для глубины */
-}
-
-/* Контейнер для опций типов резки */
-.cutting-options {
+/* ===== СТИЛИ ДЛЯ БЛОКОВ ТИПОВ РЕЗКИ И МАТЕРИАЛОВ ===== */
+/* Контейнеры для опций типов резки и материалов */
+.cutting-options, .material-options {
     display: flex;           /* Flexbox для структуры */
     flex-direction: column;  /* Элементы в столбец */
-    gap: 10px;               /* Расстояние между элементами */
+    gap: 0px;               /* Расстояние между элементами */
+    width: 100%;             /* Полная ширина */
+    padding: 10px;           /* Внутренние отступы */
+    box-sizing: border-box;  /* Учитываем padding в общей ширине */
 }
 
-/* Отдельный элемент типа резки */
-.cutting-type {
-    margin: 10px 0;          /* Вертикальные отступы */
+/* Отдельные элементы типов резки и материалов */
+.cutting-type, .material-type {
+    margin: 5px 0;           /* Вертикальные отступы */
+    width: 100%;             /* Полная ширина */
 }
 
-/* ===== СЕКЦИЯ ТИПОВ МАТЕРИАЛОВ ===== */
-/* Контейнер для типов материалов */
-.material-types {
-    background: #f8f9fa;     /* Светло-серый фон */
-    border-radius: 8px;      /* Скругленные углы */
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1); /* Тень для глубины */
-}
-
-/* Контейнер для опций типов материалов */
-.material-options {
-    display: flex;           /* Flexbox для структуры */
-    flex-direction: column;  /* Элементы в столбец */
-    gap: 10px;               /* Расстояние между элементами */
-}
-
-/* Отдельный элемент типа материала */
-.material-type {
-    margin: 10px 0;          /* Вертикальные отступы */
-}
-
-/* ===== СЕКЦИЯ ТОЛЩИНЫ МАТЕРИАЛА ===== */
-/* Контейнер для выбора толщины */
-.thickness-selector {
-    height: 100%;            /* Полная высота */
-}
-
-/* Контейнер для элементов ввода толщины */
-.thickness-input-container {
+/* ===== СТИЛИ ДЛЯ БЛОКОВ ТОЛЩИНЫ И ДЛИНЫ РЕЗА ===== */
+/* Контейнеры для элементов ввода толщины и длины */
+.thickness-input-container, .file-input-container {
     display: flex;           /* Flexbox для структуры */
     flex-direction: column;  /* Элементы в столбец */
     gap: 10px;               /* Расстояние между элементами */
     width: 100%;             /* Полная ширина */
-    margin-top: 10px;        /* Отступ сверху */
+    align-items: center;     /* Центрирование по горизонтали */
+    padding: 10px;           /* Внутренние отступы */
+    box-sizing: border-box;  /* Учитываем padding в общей ширине */
 }
 
-/* Поля ввода в секции толщины */
+/* Поля ввода в секциях толщины и длины */
 .thickness-input-container input,
-.thickness-input-container select {
-    width: 100%;             /* Полная ширина */
+.thickness-input-container select,
+.manual-input-container input {
+    width: 80%;              /* Ширина 80% от контейнера */
     padding: 8px 10px;       /* Внутренние отступы */
     border: 1px solid #ced4da; /* Граница */
     border-radius: 4px;      /* Скругленные углы */
     font-size: 14px;         /* Размер шрифта */
+    box-sizing: border-box;  /* Учитываем padding в общей ширине */
 }
 
-/* Кнопка очистки в секции толщины */
-.thickness-input-container .clear-button {
-    align-self: flex-end;    /* Выравнивание по правому краю */
+/* Кнопка очистки */
+.clear-button {
+    width: 80%;              /* Ширина 80% от контейнера */
+    padding: 8px 10px;       /* Внутренние отступы */
+    background-color: #ff4444; /* Красный фон */
+    color: white;            /* Белый текст */
+    border: none;            /* Убираем границу */
+    border-radius: 4px;      /* Скругленные углы */
+    cursor: pointer;         /* Курсор-указатель */
+    font-size: 14px;         /* Размер шрифта */
+    text-align: center;      /* Центрирование текста */
     margin-top: 10px;        /* Отступ сверху */
 }
 
-/* ===== СЕКЦИЯ ДЛИНЫ РЕЗА ===== */
-/* Контейнер для длины реза */
-.cut-length-section {
-    height: 100%;            /* Полная высота */
+/* Эффект при наведении на кнопку очистки */
+.clear-button:hover {
+    background-color: #ff6666; /* Светлее красный при наведении */
 }
 
-/* Селектор режима ввода (файл/ручной) */
-.input-mode-selector {
-    display: flex;           /* Flexbox для структуры */
-    gap: 20px;               /* Расстояние между элементами */
-    margin-bottom: 20px;     /* Отступ снизу */
-    justify-content: center; /* Центрирование элементов */
-}
-
-/* Контейнер для элементов ввода длины */
-.file-input-container {
-    display: flex;           /* Flexbox для структуры */
-    flex-direction: column;  /* Элементы в столбец */
-    gap: 10px;               /* Расстояние между элементами */
-    width: 100%;             /* Полная ширина */
-}
-
-/* Контейнер для ручного ввода */
-.manual-input-container {
-    width: 100%;             /* Полная ширина */
-}
-
-/* Поле ввода для ручного режима */
-.manual-input-container input {
-    width: 100%;             /* Полная ширина */
-    padding: 8px 10px;       /* Внутренние отступы */
-    border: 1px solid #ced4da; /* Граница */
-    border-radius: 4px;      /* Скругленные углы */
-    font-size: 14px;         /* Размер шрифта */
-}
 
 /* Отображение длины реза */
 .cut-length-display {
-    margin-top: 20px;        /* Отступ сверху */
-    padding: 15px;           /* Внутренние отступы */
+    position: absolute;      /* Абсолютное позиционирование */
+    bottom: 15px;            /* Отступ снизу */
+    left: 10%;               /* Отступ слева */
+    right: 10%;              /* Отступ справа */
+    padding: 8px;            /* Внутренние отступы */
     background: #e9ecef;     /* Светло-серый фон */
+    border: 1px solid #ced4da; /* Добавляем рамку */
     border-radius: 4px;      /* Скругленные углы */
     display: flex;           /* Flexbox для структуры */
     justify-content: space-between; /* Распределение по краям */
     align-items: center;     /* Центрирование по вертикали */
-    width: 100%;             /* Полная ширина */
+    height: 40px;            /* Фиксированная высота */
+    box-sizing: border-box;  /* Учитываем padding в общей ширине */
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1); /* Легкая тень */
+    width: 80%;              /* Ширина 80% от контейнера */
 }
 
-/* ===== СЕКЦИЯ ТОЧЕК СГИБА И РЕЗЬБЫ/ВСТАВОК/ЦЕКОВОК ===== */
-/* Общий контейнер для секции */
-.bending-points-threads-inserts-mats-section {
-    background: #f8f9fa;     /* Светло-серый фон */
-    padding: 20px;           /* Внутренние отступы */
-    border-radius: 8px;      /* Скругленные углы */
-    margin-bottom: 20px;     /* Отступ снизу */
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1); /* Тень для глубины */
-}
-
-/* Контейнер для колонок внутри секции */
-.section-columns {
-    display: flex;           /* Flexbox для структуры */
-    gap: 30px;               /* Расстояние между колонками */
-    flex-wrap: wrap;         /* Перенос на новую строку при необходимости */
-}
-
-/* Стиль для каждой колонки */
-.section-column {
-    flex: 1;                 /* Равное пространство */
-    min-width: 250px;        /* Минимальная ширина */
-    display: flex;           /* Flexbox для структуры */
-    flex-direction: column;  /* Элементы в столбец */
-    align-items: center;     /* Центрирование содержимого */
-}
-
-/* Заголовки в колонках */
-.section-column h2 {
-    margin-top: 0;           /* Убираем отступ сверху */
-    margin-bottom: 15px;     /* Отступ снизу */
-    font-size: 1.2rem;       /* Размер шрифта */
+/* Текст внутри отображения длины реза */
+.cut-length-display span {
+    font-size: 14px;         /* Уменьшенный размер шрифта */
     color: #333;             /* Цвет текста */
-    text-align: center;      /* Центрирование текста */
 }
 
-/* Общие стили для опций в обеих секциях */
+/* Значение длины реза (второй span) */
+.cut-length-display span:last-child {
+    font-weight: bold;       /* Жирный шрифт для значения */
+    color: #ef0e0ec8;          /* Синий цвет для выделения */
+}
+
+
+
+/* ===== СТИЛИ ДЛЯ БЛОКОВ ГИБКИ И РЕЗЬБЫ ===== */
+/* Общие стили для опций в секциях */
 .bending-points-options,
 .threads-inserts-mats-options {
     display: flex;           /* Flexbox для структуры */
     flex-direction: column;  /* Элементы в столбец */
-    gap: 15px;               /* Расстояние между элементами */
+    gap: 10px;               /* Расстояние между элементами */
     width: 100%;             /* Полная ширина */
     align-items: center;     /* Центрирование содержимого */
 }
@@ -233,19 +215,14 @@ h2 {
     display: flex;           /* Flexbox для структуры */
     gap: 15px;               /* Расстояние между элементами */
     justify-content: center; /* Центрирование радио-кнопок */
+    width: 100%;             /* Полная ширина */
 }
 
 /* Стиль для меток */
 .radio-group label {
     display: flex;           /* Flexbox для структуры */
     align-items: center;     /* Центрирование по вертикали */
-    margin-right: 20px;      /* Отступ справа */
     cursor: pointer;         /* Курсор-указатель */
-}
-
-/* Стиль для радио-кнопок */
-.radio-group input[type="radio"] {
-    margin-right: 8px;       /* Отступ справа */
 }
 
 /* Контейнер для числового ввода */
@@ -253,12 +230,12 @@ h2 {
     margin-top: 5px;         /* Отступ сверху */
     display: flex;           /* Flexbox для структуры */
     justify-content: center; /* Центрирование поля ввода */
+    width: 100%;             /* Полная ширина */
 }
 
 /* Стиль для числового ввода */
 .number-input-container input[type="number"] {
-    width: 100%;             /* Полная ширина */
-    max-width: 150px;        /* Максимальная ширина */
+    width: 80%;              /* Ширина 80% от контейнера */
     padding: 8px 10px;       /* Внутренние отступы */
     border: 1px solid #ced4da; /* Граница */
     border-radius: 4px;      /* Скругленные углы */
@@ -271,152 +248,187 @@ h2 {
     cursor: not-allowed;     /* Курсор запрета */
 }
 
-/* ===== СЕКЦИЯ ДОПОЛНИТЕЛЬНЫХ ОПЦИЙ ===== */
-/* Контейнер для дополнительных опций */
-.section-other-options {
-    background: #f8f9fa;     /* Светло-серый фон */
-    padding: 20px;           /* Внутренние отступы */
-    border-radius: 8px;      /* Скругленные углы */
-    margin-bottom: 20px;     /* Отступ снизу */
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1); /* Тень для глубины */
+/* ===== СТИЛИ ДЛЯ БЛОКА ДРУГИХ ОПЦИЙ ===== */
+/* Контейнер для содержимого других опций */
+.options-content {
+    display: flex;           /* Flexbox для структуры */
+    flex-direction: column;  /* Элементы в столбец */
+    gap: 10px;               /* Расстояние между строками */
+    width: 100%;             /* Полная ширина */
 }
 
-/* Строка с полями ввода */
+/* Строка в секции других опций */
 .options-row {
     display: flex;           /* Flexbox для структуры */
-    flex-wrap: wrap;         /* Перенос на новую строку при необходимости */
-    gap: 15px;               /* Расстояние между элементами */
-    margin-bottom: 20px;     /* Отступ снизу */
-    align-items: flex-end;   /* Выравнивание по нижнему краю для кнопки */
+    gap: 10px;               /* Расстояние между элементами */
+    justify-content: space-between; /* Распределение пространства */
+    width: 100%;             /* Полная ширина */
 }
 
-/* Строка с результатами */
-.results-row {
-    display: flex;           /* Flexbox для структуры */
-    flex-wrap: wrap;         /* Перенос на новую строку при необходимости */
-    gap: 30px;               /* Расстояние между элементами */
-    padding-top: 15px;       /* Отступ сверху */
-    border-top: 1px solid #e0e0e0; /* Верхняя граница */
+/* Группа ввода в других опциях */
+.options-row .input-group {
+    flex: 1;                 /* Растягивается на доступное пространство */
+    min-width: 0;            /* Минимальная ширина */
 }
 
-/* Группа ввода (метка + поле) */
-.input-group {
-    flex: 1;                 /* Равное пространство */
-    min-width: 180px;        /* Минимальная ширина */
-    display: flex;           /* Flexbox для структуры */
-    flex-direction: column;  /* Элементы в столбец */
-    gap: 5px;                /* Расстояние между элементами */
-}
-
-/* Группа результата (метка + значение) */
-.result-group {
-    flex: 1;                 /* Равное пространство */
-    min-width: 200px;        /* Минимальная ширина */
-    display: flex;           /* Flexbox для структуры */
-    flex-direction: column;  /* Элементы в столбец */
-    gap: 5px;                /* Расстояние между элементами */
-}
-
-/* Метки для полей ввода и результатов */
-.input-group label,
-.result-group label {
-    font-size: 14px;         /* Размер шрифта */
-    color: #555;             /* Цвет текста */
-    margin-bottom: 5px;      /* Отступ снизу */
-}
-
-/* Поля ввода */
-.input-group input {
+/* Поля ввода в других опциях */
+.options-row .input-group input {
+    width: 100%;             /* Полная ширина */
     padding: 8px 10px;       /* Внутренние отступы */
     border: 1px solid #ced4da; /* Граница */
     border-radius: 4px;      /* Скругленные углы */
     font-size: 14px;         /* Размер шрифта */
-    width: 100%;             /* Полная ширина */
+    box-sizing: border-box;  /* Учитываем padding в общей ширине */
 }
 
-/* Блок отображения результата */
-.result-value {
-    padding: 10px;           /* Внутренние отступы */
-    background: #e9ecef;     /* Светло-серый фон */
-    border-radius: 4px;      /* Скругленные углы */
-    font-size: 16px;         /* Размер шрифта */
-    font-weight: bold;       /* Жирный шрифт */
-    color: #333;             /* Цвет текста */
-    text-align: center;      /* Центрирование текста */
+/* Кнопка очистить в других опциях */
+.options-row .clear-button {
+    height: 32px;            /* Высота как у полей ввода */
+    padding: 0 15px;         /* Горизонтальные отступы */
+    width: auto;             /* Автоматическая ширина */
+    margin-top: 0;           /* Убираем отступ сверху */
+    align-self: flex-end;    /* Выравнивание по нижнему краю */
 }
 
-/* Кнопка очистки в секции дополнительных опций */
-.section-other-options .clear-button {
-    padding: 8px 15px;       /* Внутренние отступы */
-    height: 38px;            /* Высота как у полей ввода */
-    background-color: #ff4444; /* Красный фон */
-    color: white;            /* Белый текст */
-    border: none;            /* Убираем границу */
-    border-radius: 4px;      /* Скругленные углы */
-    cursor: pointer;         /* Курсор-указатель */
+/* Метки полей ввода */
+.options-row .input-group label {
     font-size: 14px;         /* Размер шрифта */
-    white-space: nowrap;     /* Запрет переноса текста */
+    margin-bottom: 5px;      /* Отступ снизу */
+    display: block;          /* Блочное отображение */
 }
 
-/* Эффект при наведении на кнопку очистки */
-.section-other-options .clear-button:hover {
-    background-color: #ff6666; /* Светлее красный при наведении */
+/* ===== СТИЛИ ДЛЯ БЛОКА РЕЗУЛЬТАТОВ ===== */
+/* Секция результатов */
+.results-section {
+    flex: 1;                 /* Занимает равное пространство */
+    background: linear-gradient(to bottom, #f0f7ff, #e6f0ff); /* Градиент от светло-синего к более насыщенному */
+    border-radius: 8px;      /* Скругленные углы */
+    box-shadow: 0 2px 8px rgba(0, 123, 255, 0.15); /* Более заметная синяя тень */
+    padding: 15px;           /* Внутренние отступы */
+    display: flex;           /* Flexbox для центрирования */
+    flex-direction: column;  /* Элементы в столбец */
+    justify-content: flex-start; /* Выравнивание по верхнему краю */
+    align-items: center;     /* Центрирование по горизонтали */
+    min-height: 150px;       /* Минимальная высота */
+    box-sizing: border-box;  /* Учитываем padding в общей ширине */
+    border: 1px solid rgba(0, 123, 255, 0.2); /* Легкая синяя рамка */
+    position: relative;      /* Для позиционирования элементов */
 }
 
-/* ===== ОБЩИЕ СТИЛИ ДЛЯ ЭЛЕМЕНТОВ ФОРМ ===== */
-/* Стиль для радио-кнопок */
-input[type="radio"] {
-    margin-right: 10px;      /* Отступ между кнопкой и текстом */
-}
-
-/* Стиль для меток (текста) */
-label {
-    display: inline-flex;    /* Выравнивание элементов внутри метки */
+/* Заголовок секции результатов */
+.results-section h2 {
+    text-align: center;      /* Центрирование текста */
+    margin: 0 0 15px 0;      /* Отступы */
+    height: 30px;            /* Фиксированная высота */
+    display: flex;           /* Flexbox для центрирования */
     align-items: center;     /* Центрирование по вертикали */
-    cursor: pointer;         /* Курсор-указатель для лучшего UX */
-    font-size: 16px;         /* Размер шрифта */
+    justify-content: center; /* Центрирование по горизонтали */
+    width: 100%;             /* Полная ширина */
+    font-size: 1.2rem;       /* Размер шрифта */
+    color: #0b1f34;          /* Темно-синий цвет */
+    
+    padding-bottom: 5px;     /* Отступ снизу */
+    font-weight: 600;        /* Чуть жирнее шрифт */
 }
 
-/* Стиль для текстовых полей и выпадающих списков */
-input[type="text"],
-select {
-    padding: 8px;            /* Внутренние отступы */
-    border: 1px solid #ddd;  /* Тонкая серая рамка */
-    border-radius: 4px;      /* Скругленные углы */
-    font-size: 16px;         /* Размер шрифта */
+/* Контейнер для результатов */
+.results-content {
+    display: flex;           /* Flexbox для структуры */
+    flex-direction: column;  /* Элементы в столбец */
+    gap: 15px;               /* Увеличенное расстояние между элементами */
+    width: 100%;             /* Полная ширина */
+    align-items: center;     /* Центрирование содержимого */
+    padding: 10px;           /* Внутренние отступы */
 }
 
-/* Кнопка очистки (общий стиль) */
-.clear-button {
-    padding: 5px 10px;       /* Внутренние отступы */
-    background-color: #ff4444; /* Красный фон */
-    color: white;            /* Белый текст */
-    border: none;            /* Убираем границу */
-    border-radius: 4px;      /* Скругленные углы */
-    cursor: pointer;         /* Курсор-указатель */
+/* Группа результата */
+.result-group {
+    width: 90%;              /* Ширина чуть меньше контейнера */
+    display: flex;           /* Flexbox для структуры */
+    flex-direction: column;  /* Элементы в столбец */
+    gap: 8px;                /* Расстояние между элементами */
+    background: rgba(255, 255, 255, 0.7); /* Полупрозрачный белый фон */
+    padding: 5px;           /* Внутренние отступы */
+    border-radius: 6px;      /* Скругленные углы */
+    box-shadow: 0 2px 4px rgba(0, 123, 255, 0.652); /* Легкая синяя тень */
 }
 
-/* Эффект при наведении на кнопку очистки */
-.clear-button:hover {
-    background-color: #ff6666; /* Светлее красный при наведении */
+/* Метка результата */
+.result-group label {
+    font-size: 14px;         /* Размер шрифта */
+    color: #0b1f34;          /* Темно-синий цвет */
+    text-align: center;      /* Центрирование текста */
+    font-weight: 500;        /* Чуть жирнее шрифт */
 }
+
+/* Значение результата */
+.result-value {
+    padding: 12px;           /* Увеличенные внутренние отступы */
+    background: white;       /* Белый фон */
+    border-radius: 6px;      /* Скругленные углы */
+    font-size: 18px;         /* Увеличенный размер шрифта */
+    font-weight: bold;       /* Жирный шрифт */
+    color: #0b1f34;          /* Темно-синий цвет */
+    text-align: center;      /* Центрирование текста */
+    width: 100%;             /* Полная ширина */
+    box-sizing: border-box;  /* Учитываем padding в общей ширине */
+    box-shadow: 0 2px 4px rgba(0, 123, 255, 0.1); /* Легкая синяя тень */
+    border: 1px solid rgba(0, 123, 255, 0.2); /* Легкая синяя рамка */
+    position: relative;      /* Для эффекта при наведении */
+    transition: all 0.2s ease; /* Плавный переход для эффектов */
+}
+
+/* Эффект при наведении на значение результата */
+.result-value:hover {
+    transform: translateY(-1px); /* Легкое поднятие */
+    box-shadow: 0 4px 8px rgba(0, 123, 255, 0.2); /* Усиление тени */
+    border-color: rgba(0, 123, 255, 0.4); /* Более заметная рамка */
+}
+
+/* Добавляем значок евро перед значением */
+.result-value::before {
+    content: '€';            /* Символ евро */
+    margin-right: 5px;       /* Отступ справа */
+    color: #020509;          /* Темно-синий цвет */
+    opacity: 0.7;            /* Полупрозрачность */
+}
+
+/* Анимация появления результатов */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(5px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.result-group {
+    animation: fadeIn 0.3s ease-out; /* Анимация появления */
+}
+
 
 /* ===== ИНФОРМАЦИОННОЕ ОКНО И ИСТОРИЯ ===== */
-/* Боковая информационная панель */
+/* Информационный блок */
 .info-box {
-    width: 380px;            /* Фиксированная ширина */
-    position: fixed;         /* Фиксированное позиционирование */
-    right: calc((100% - 1400px) / 2 + 20px); /* Позиция справа с учетом центрирования контейнера */
-    top: 20px;               /* Отступ сверху */
-    bottom: 20px;            /* Отступ снизу */
+    width: 100%;             /* Полная ширина */
     background: #f5f5f5;     /* Светло-серый фон */
-    padding: 20px;           /* Внутренние отступы */
+    padding: 10px;           /* Внутренние отступы */
     border-radius: 8px;      /* Скругленные углы */
     box-shadow: 0 2px 8px rgba(0,0,0,0.1); /* Тень для глубины */
-    overflow-y: auto;        /* Вертикальная прокрутка при необходимости */
-    height: calc(100vh - 40px); /* Высота с учетом отступов */
-    display: flex;           /* Flexbox для структуры содержимого */
-    flex-direction: column;  /* Расположение элементов по вертикали */
+    margin-top: 10px;        /* Уменьшенный отступ сверху */
+}
+
+/* Заголовок информационного блока */
+.info-box h2 {
+    font-size: 18px;         /* Уменьшенный размер шрифта */
+    margin: 0 0 5px 0;      /* Отступы */
+    color: #000000;             /* Цвет текста */
+    text-align: center;      /* Центрирование текста */
+    padding-bottom: 10px;    /* Отступ снизу */
+    font-weight: 500;        /* Чуть менее жирный шрифт */
 }
 
 /* Список сообщений истории */
@@ -424,9 +436,8 @@ select {
     display: flex;           /* Flexbox для структуры */
     flex-direction: column;  /* Расположение элементов по вертикали */
     gap: 10px;               /* Расстояние между сообщениями */
-    max-height: calc(100vh - 120px); /* Максимальная высота */
+    max-height: 200px;       /* Максимальная высота для 5 сообщений */
     overflow-y: auto;        /* Вертикальная прокрутка при переполнении */
-    flex-shrink: 0;          /* Запрещаем сжимать элементы */
 }
 
 /* Отдельные сообщения в истории */
@@ -438,169 +449,82 @@ select {
     border-left: 3px solid #007bff; /* Синяя полоса слева для акцента */
     font-size: 14px;         /* Размер шрифта */
     line-height: 1.4;        /* Межстрочный интервал */
-    transition: transform 0.3s ease-out; /* Плавный переход для анимации */
     /* Улучшения для отображения длинного текста */
     white-space: pre-wrap;   /* Сохраняет переносы строк и обрабатывает пробелы */
     word-wrap: break-word;   /* Разрыв длинных слов */
     overflow-wrap: break-word; /* Современная версия word-wrap */
-    overflow-x: auto;        /* Горизонтальная прокрутка для очень длинных строк */
-    max-width: 100%;         /* Ограничение ширины */
-    flex-shrink: 0;          /* Запрещаем сжимать элементы */
-    overflow-y: auto;        /* Вертикальная прокрутка при необходимости */
 }
 
-/* Стиль для кода и форматированного текста внутри сообщений */
-.history-list p code,
-.history-list p pre {
-    font-family: monospace;  /* Моноширинный шрифт для кода */
-    background: #f0f0f0;     /* Светло-серый фон */
-    padding: 2px 4px;        /* Внутренние отступы */
-    border-radius: 3px;      /* Скругленные углы */
-    white-space: pre;        /* Сохранение форматирования */
+/* Показываем только последние 5 сообщений по умолчанию */
+.history-list p:nth-child(n+6) {
+    display: none;
 }
 
-/* ===== АНИМАЦИИ ДЛЯ СООБЩЕНИЙ ===== */
-/* Анимация для новых сообщений (первый элемент списка) */
-.history-list p:first-child {
-    animation: slideIn 0.3s ease-out; /* Анимация появления сверху */
+/* Когда список активен (при скролле), показываем все сообщения */
+.history-list:hover p:nth-child(n+6),
+.history-list:focus p:nth-child(n+6),
+.history-list:active p:nth-child(n+6) {
+    display: block;
 }
 
-/* Анимация для существующих сообщений при добавлении нового */
-.history-list p {
-    animation: slideDown 0.3s ease-out; /* Анимация сдвига вниз */
+/* Стилизация скроллбара для истории */
+.history-list::-webkit-scrollbar {
+    width: 8px;              /* Ширина скроллбара */
 }
 
-/* Определение анимации появления сообщения */
-@keyframes slideIn {
-    from {
-        opacity: 0;          /* Начальная прозрачность */
-        transform: translateY(-20px); /* Начальное смещение вверх */
-    }
-    to {
-        opacity: 1;          /* Конечная прозрачность */
-        transform: translateY(0); /* Конечное положение */
-    }
+.history-list::-webkit-scrollbar-track {
+    background: #f1f1f1;     /* Цвет трека */
+    border-radius: 4px;      /* Скругленные углы */
 }
 
-/* Определение анимации сдвига существующих сообщений */
-@keyframes slideDown {
-    from {
-        transform: translateY(0); /* Начальное положение */
-    }
-    to {
-        transform: translateY(10px); /* Конечное смещение вниз */
-    }
+.history-list::-webkit-scrollbar-thumb {
+    background: #c1c1c1;     /* Цвет ползунка */
+    border-radius: 4px;      /* Скругленные углы */
 }
 
-/* Анимация при удалении сообщения */
-.history-list p.removing {
-    animation: fadeOut 0.3s ease-out; /* Анимация исчезновения */
+.history-list::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;     /* Цвет ползунка при наведении */
 }
 
-/* Определение анимации исчезновения */
-@keyframes fadeOut {
-    from {
-        opacity: 1;          /* Начальная прозрачность */
-        transform: translateY(0); /* Начальное положение */
-    }
-    to {
-        opacity: 0;          /* Конечная прозрачность */
-        transform: translateY(20px); /* Конечное смещение вниз */
-    }
-}
 
 /* ===== АДАПТИВНОСТЬ ===== */
-/* Экраны шириной до 1400px */
-@media (max-width: 1400px) {
-    .container {
-        padding: 10px;       /* Уменьшаем отступы на меньших экранах */
-    }
-
-    .info-box {
-        right: 20px;         /* Изменение позиции боковой панели */
-    }
-
-    .main-content {
-        margin-right: 400px; /* Сохраняем отступ для боковой панели */
-    }
-}
-
-/* Экраны шириной до 1200px (для планшетов и мобильных) */
+/* Экраны шириной до 1200px (для планшетов) */
 @media (max-width: 1200px) {
-    .container {
+    .row-1, .row-2 {
         flex-direction: column; /* Меняем направление на вертикальное */
-    }
-
-    .main-content {
-        margin-right: 0;     /* Убираем боковой отступ */
-        max-width: 100%;     /* Расширяем на всю доступную ширину */
-    }
-
-    .info-box {
-        position: static;    /* Отключаем фиксированное позиционирование */
-        width: 100%;         /* Расширяем на всю ширину */
-        height: auto;        /* Автоматическая высота */
-        margin-top: 20px;    /* Отступ сверху */
-    }
-
-    /* Адаптируем элементы ввода для мобильных устройств */
-    .thickness-input-container,
-    .input-mode-selector {
-        flex-direction: column; /* Вертикальное расположение элементов */
+        gap: 20px;           /* Расстояние между элементами */
     }
     
-    /* Адаптация для секции точек сгиба на мобильных устройствах */
-    .bending-points-options {
-        flex-direction: column;
-        align-items: flex-start;
+    .block-row {
+        flex-direction: column; /* Меняем направление на вертикальное */
+        gap: 20px;           /* Расстояние между элементами */
     }
     
-    .bending-points-options label {
-        margin-bottom: 10px;
+    .cutting-types, .material-types, .thickness-selector, .cut-length-section {
+        width: 100%;         /* Полная ширина */
     }
     
-    .bending-points-options input[type="number"] {
-        margin-top: 10px;
+    .bending-section, .threads-section, .other-options {
+        width: 100%;         /* Полная ширина */
     }
 }
 
-/* Адаптивность для мобильных устройств */
+/* Экраны шириной до 768px (для мобильных) */
 @media (max-width: 768px) {
-    .container-row {
-        flex-direction: column; /* Меняем направление на вертикальное */
-        gap: 20px;           /* Расстояние между элементами */
-    }
-    
-    .column {
-        width: 100%;         /* Полная ширина */
-    }
-    
-    .section-columns {
-        flex-direction: column; /* Меняем направление на вертикальное */
-        gap: 20px;           /* Расстояние между элементами */
-    }
-    
-    .section-column {
-        width: 100%;         /* Полная ширина */
-    }
-    
-    .radio-group {
-        flex-wrap: wrap;     /* Перенос на новую строку при необходимости */
-    }
-    
-    .options-row,
     .results-row {
         flex-direction: column; /* Меняем направление на вертикальное */
         gap: 15px;           /* Расстояние между элементами */
     }
     
-    .input-group,
     .result-group {
         width: 100%;         /* Полная ширина */
     }
     
-    .section-other-options .clear-button {
+    .input-group {
         width: 100%;         /* Полная ширина */
-        margin-top: 10px;    /* Отступ сверху */
+    }
+    
+    .radio-group {
+        flex-wrap: wrap;     /* Перенос на новую строку при необходимости */
     }
 }
