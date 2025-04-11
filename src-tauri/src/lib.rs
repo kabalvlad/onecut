@@ -8,7 +8,7 @@ mod cutting_data;
 use state::{
     TypeCutting, TypeMaterial, Thickness, CutLength, BendingPoints,
     ThreadsInsertsMats, QuantityParts, CostMaterial, MarginDeal,
-    PriceOnePart, PriceAllParts, AppState,
+    PriceOnePart, PriceAllParts,
     set_type_cutting, get_type_cutting,
     set_type_material, get_type_material,
     set_thickness, get_thickness,
@@ -41,9 +41,7 @@ pub fn run() {
         .manage(MarginDeal::new())
         .manage(PriceOnePart::new())
         .manage(PriceAllParts::new())
-        
-        // Регистрируем новое состояние
-        .manage(AppState::new())
+
         
         // Регистрируем обработчики команд
         .invoke_handler(tauri::generate_handler![
