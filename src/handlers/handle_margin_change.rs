@@ -1,24 +1,10 @@
 use web_sys::{Event, HtmlInputElement};
 use yew::prelude::*;
 use wasm_bindgen_futures::spawn_local;
-use wasm_bindgen::prelude::*;
-use serde::Serialize;
-use crate::models::{AppState, AppAction};
+use crate::tauri_api::set_margin_deal;
+use crate::tauri_api::update_prices;
 
-#[wasm_bindgen]
-extern "C" {
-    #[wasm_bindgen(js_namespace = ["window", "__TAURI__", "tauri"])]
-    async fn invoke(cmd: &str, args: JsValue) -> JsValue;
-}
-
-#[derive(Serialize)]
-struct MarginArgs {
-    margin: f32,
-}
-
-pub fn handle_margin_change(
-    state: UseReducerHandle<AppState>,
-) -> Callback<Event> {
+pub fn handle_margin_change() -> Callback<Event> {
     Callback::from(move |e: Event| {
         let input: HtmlInputElement = e.target_unchecked_into();
         let value_str = input.value();
@@ -30,11 +16,10 @@ pub fn handle_margin_change(
                 if val < 0 { 0 } else if val > 100 { 100 } else { val }
             },
             Err(_) => {
-                // Если введено некорректное значение, используем текущее значение маржи
-                input.set_value(&state.margin.to_string());
-                state.dispatch(AppAction::AddHistoryMessage(
-                    "Ошибка: введено некорректное значение маржи".to_string()
-                ));
+                // Если введено некорректное значение, выводим сообщение об ошибке
+                web_sys::console::error_1(
+                    &"Ошибка: введено некорректное значение маржи".into()
+                );
                 return;
             }
         };
@@ -42,25 +27,35 @@ pub fn handle_margin_change(
         // Обновляем значение в поле ввода
         input.set_value(&value.to_string());
         
-        // Обновляем состояние
-        state.dispatch(AppAction::SetMargin(value));
+        // Выводим сообщение в консоль
+        web_sys::console::log_1(
+            &format!("Маржа {}% установлена", value).into()
+        );
         
-        // Добавляем сообщение в историю
-        state.dispatch(AppAction::AddHistoryMessage(
-            format!("Маржа {}% установлена", value)
-        ));
-        
-        // Отправляем новое значение маржи на бэкенд
+        // Отправляем новое значение маржи на бэкенд через Tauri API
         let margin_value = value as f32;
         
         spawn_local(async move {
-            let args = match serde_wasm_bindgen::to_value(&MarginArgs { margin: margin_value }) {
-                Ok(args) => args,
-                Err(_) => return, // Просто выходим в случае ошибки сериализации
-            };
-            
-            // Просто вызываем бэкенд без дополнительных сообщений об успехе
-            let _ = invoke("set_margin_deal", args).await;
+            match set_margin_deal(margin_value).await {
+                Ok(_) => {
+                    web_sys::console::log_1(
+                        &format!("Маржа {}% успешно установлена в системе", value).into()
+                    );
+                },
+                Err(e) => {
+                    web_sys::console::error_1(
+                        &format!("Ошибка при установке маржи {}%: {:?}", value, e).into()
+                    );
+                }
+            }
+        });
+        // В конце обработчика
+        spawn_local(async {
+            if let Err(e) = update_prices().await {
+                web_sys::console::error_1(
+                    &format!("Не удалось обновить цены: {:?}", e).into()
+                );
+            }
         });
     })
 }
