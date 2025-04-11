@@ -2,25 +2,11 @@ use web_sys::Event;
 use yew::prelude::*;
 use web_sys::HtmlInputElement;
 use std::str::FromStr;
-use serde::{Deserialize, Serialize};
-use wasm_bindgen::prelude::*;
-use crate::models::{AppState, AppAction};
+use wasm_bindgen_futures::spawn_local;
+use crate::tauri_api::set_cut_length;
+use crate::tauri_api::update_prices;
 
-// Определение функции invoke для взаимодействия с Tauri
-#[wasm_bindgen]
-extern "C" {
-    #[wasm_bindgen(js_namespace = ["window", "__TAURI__", "tauri"])]
-    async fn invoke(cmd: &str, args: JsValue) -> JsValue;
-}
-
-#[derive(Serialize, Deserialize)]
-struct SetCutLengthArgs {
-    cut_length: f32,
-}
-
-pub fn handle_cut_length_input(
-    state: UseReducerHandle<AppState>,
-) -> Callback<Event> {
+pub fn handle_cut_length_input() -> Callback<Event> {
     Callback::from(move |e: Event| {
         let input = e.target_dyn_into::<HtmlInputElement>().unwrap();
         let value = input.value();
@@ -36,59 +22,49 @@ pub fn handle_cut_length_input(
         match f32::from_str(&normalized_value) {
             Ok(length) => {
                 if length >= 0.0 {
-                    // Обновляем длину реза через dispatch
-                    state.dispatch(AppAction::SetCutLength(length));
-                    
-                    // Сразу выводим сообщение о установке длины
-                    state.dispatch(AppAction::AddHistoryMessage(
-                        format!("Установлена длина реза: {:.2} мм", length)
-                    ));
+                    // Выводим сообщение в консоль
+                    web_sys::console::log_1(
+                        &format!("Установлена длина реза: {:.2} мм", length).into()
+                    );
 
-                    // Отправляем данные на бэкенд
-                    let args = SetCutLengthArgs { cut_length: length };
-                    let state_clone = state.clone();
+                    // Отправляем данные на бэкенд через Tauri API
+                    let length_clone = length;
                     
-                    wasm_bindgen_futures::spawn_local(async move {
-                        let args = match serde_wasm_bindgen::to_value(&args) {
-                            Ok(args) => args,
-                            Err(_) => {
-                                state_clone.dispatch(AppAction::AddHistoryMessage(
-                                    "Ошибка: не удалось сериализовать данные для отправки".to_string()
-                                ));
-                                return;
-                            }
-                        };
-                        
-                        match invoke("set_cut_length", args).await.as_bool() {
-                            Some(true) => {
-                                // Успешно отправлено на бэкенд
-                                state_clone.dispatch(AppAction::AddHistoryMessage(
-                                    "Длина реза успешно сохранена на сервере".to_string()
-                                ));
+                    spawn_local(async move {
+                        match set_cut_length(length_clone).await {
+                            Ok(_) => {
+                                web_sys::console::log_1(
+                                    &"Длина реза успешно сохранена на сервере".into()
+                                );
                             },
-                            _ => {
-                                // Ошибка при отправке на бэкенд
-                                state_clone.dispatch(AppAction::AddHistoryMessage(
-                                    "Ошибка: не удалось отправить длину реза на сервер".to_string()
-                                ));
-                                // Можно также сбросить значение в состоянии, если нужно
-                                // state_clone.dispatch(AppAction::SetCutLength(0.0));
+                            Err(e) => {
+                                web_sys::console::error_1(
+                                    &format!("Ошибка при установке длины реза: {:?}", e).into()
+                                );
                             }
                         }
                     });
                 } else {
                     // Отрицательное значение
-                    state.dispatch(AppAction::AddHistoryMessage(
-                        "Ошибка: длина реза не может быть отрицательной".to_string()
-                    ));
+                    web_sys::console::error_1(
+                        &"Ошибка: длина реза не может быть отрицательной".into()
+                    );
                 }
             },
             Err(_) => {
                 // Некорректное числовое значение
-                state.dispatch(AppAction::AddHistoryMessage(
-                    format!("Ошибка: '{}' не является корректным числовым значением", value)
-                ));
+                web_sys::console::error_1(
+                    &format!("Ошибка: '{}' не является корректным числовым значением", value).into()
+                );
             }
         }
+        // В конце обработчика
+        spawn_local(async {
+            if let Err(e) = update_prices().await {
+                web_sys::console::error_1(
+                    &format!("Не удалось обновить цены: {:?}", e).into()
+                );
+            }
+        });
     })
 }

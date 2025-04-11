@@ -1,32 +1,73 @@
 use yew::prelude::*;
-use crate::models::AppState;
-
-
+use wasm_bindgen::closure::Closure;
+use wasm_bindgen::JsCast;
+use crate::handlers::{
+    handle_cutting_type_change, handle_material_change, handle_thickness_select,
+    handle_thickness_input, handle_clear_thickness, handle_input_mode_change,
+    handle_cut_length_input, handle_file_select, handle_bending_points_radio_change,
+    handle_bending_points_input_change, handle_threads_inserts_mats_radio_change,
+    handle_threads_inserts_mats_input_change, handle_parts_count_change,
+    handle_material_price_change, handle_margin_change, handle_clear_options
+};
 
 #[derive(Properties, PartialEq)]
 pub struct Props {
-    pub state: UseReducerHandle<AppState>,
     pub all_thicknesses: Vec<f32>,
-    pub handle_cutting_type_change: Callback<Event>,
-    pub handle_material_change: Callback<Event>,
-    pub handle_thickness_input: Callback<Event>,
-    pub handle_thickness_select: Callback<Event>,    
-    pub handle_clear_thickness: Callback<MouseEvent>,
-    pub handle_cut_length_input: Callback<Event>,
-    pub handle_bending_points_radio_change: Callback<Event>,
-    pub handle_bending_points_input_change: Callback<Event>,
-    pub handle_threads_inserts_mats_radio_change: Callback<Event>,
-    pub handle_threads_inserts_mats_input_change: Callback<Event>,
-    pub handle_parts_count_change: Callback<Event>,
-    pub handle_material_price_change: Callback<Event>,
-    pub handle_margin_change: Callback<Event>,
-    pub handle_clear_options: Callback<MouseEvent>,
-    pub handle_input_mode_change: Callback<String>,
-    pub handle_file_select    : Callback<Event>,
 }
 
 #[function_component(MainContent)]
 pub fn main_content(props: &Props) -> Html {
+    // Состояния для хранения цен
+    let price_per_part = use_state(|| 0.0);
+    let price_total = use_state(|| 0.0);
+
+    // Добавляем слушатель события price-update
+    {
+        let price_per_part = price_per_part.clone();
+        let price_total = price_total.clone();
+        
+        use_effect_with(
+            (),  // Пустые зависимости, эффект запускается только при монтировании
+            move |_| {
+                let window = web_sys::window().unwrap();
+                let document = window.document().unwrap();
+                
+                // Создаем функцию-обработчик события
+                let callback = Closure::wrap(Box::new(move |event: web_sys::Event| {
+                    // Преобразуем Event в CustomEvent
+                    let custom_event = event.dyn_into::<web_sys::CustomEvent>().unwrap();
+                    let detail = custom_event.detail();
+                    
+                    // Получаем цены из события
+                    if let Some(price_per_part_js) = js_sys::Reflect::get(&detail, &"pricePerPart".into()).ok() {
+                        if let Some(price) = price_per_part_js.as_f64() {
+                            price_per_part.set(price as f32);
+                        }
+                    }
+                    
+                    if let Some(price_total_js) = js_sys::Reflect::get(&detail, &"priceTotal".into()).ok() {
+                        if let Some(price) = price_total_js.as_f64() {
+                            price_total.set(price as f32);
+                        }
+                    }
+                }) as Box<dyn FnMut(_)>);
+                
+                // Добавляем слушатель события
+                document.add_event_listener_with_callback(
+                    "price-update",
+                    callback.as_ref().unchecked_ref()
+                ).unwrap();
+                
+                // Сохраняем callback, чтобы он не был удален сборщиком мусора
+                callback.forget();
+                
+                // Функция очистки (не используется, так как callback.forget())
+                || {}
+            }
+        );
+    }
+
+
     html! {
         <main class="container">
             <h1>{"Расчет стоимости резки"}</h1>
@@ -43,8 +84,7 @@ pub fn main_content(props: &Props) -> Html {
                                 <div class="cutting-type">
                                     <label>
                                         <input type="radio" name="cutting" value="laser" 
-                                            checked={props.state.cutting_type == "laser"}
-                                            onchange={props.handle_cutting_type_change.clone()}
+                                            onchange={handle_cutting_type_change()}
                                         />
                                         {"Лазерная резка"}
                                     </label>
@@ -52,8 +92,7 @@ pub fn main_content(props: &Props) -> Html {
                                 <div class="cutting-type">
                                     <label>
                                         <input type="radio" name="cutting" value="plasma"
-                                            checked={props.state.cutting_type == "plasma"}
-                                            onchange={props.handle_cutting_type_change.clone()}
+                                            onchange={handle_cutting_type_change()}
                                         />
                                         {"Плазменная резка"}
                                     </label>
@@ -61,8 +100,7 @@ pub fn main_content(props: &Props) -> Html {
                                 <div class="cutting-type">
                                     <label>
                                         <input type="radio" name="cutting" value="hydro"
-                                            checked={props.state.cutting_type == "hydro"}
-                                            onchange={props.handle_cutting_type_change.clone()}
+                                            onchange={handle_cutting_type_change()}
                                         />
                                         {"Гидроабразивная резка"}
                                     </label>
@@ -77,8 +115,7 @@ pub fn main_content(props: &Props) -> Html {
                                 <div class="material-type">
                                     <label>
                                         <input type="radio" name="material" value="aluminum"
-                                            checked={props.state.material == "aluminum"}
-                                            onchange={props.handle_material_change.clone()}
+                                            onchange={handle_material_change()}
                                         />
                                         {"Алюминий"}
                                     </label>
@@ -86,8 +123,7 @@ pub fn main_content(props: &Props) -> Html {
                                 <div class="material-type">
                                     <label>
                                         <input type="radio" name="material" value="steel"
-                                            checked={props.state.material == "steel"}
-                                            onchange={props.handle_material_change.clone()}
+                                            onchange={handle_material_change()}
                                         />
                                         {"Сталь"}
                                     </label>
@@ -95,8 +131,7 @@ pub fn main_content(props: &Props) -> Html {
                                 <div class="material-type">
                                     <label>
                                         <input type="radio" name="material" value="stainless"
-                                            checked={props.state.material == "stainless"}
-                                            onchange={props.handle_material_change.clone()}
+                                            onchange={handle_material_change()}
                                         />
                                         {"Нержавеющая сталь"}
                                     </label>
@@ -104,8 +139,7 @@ pub fn main_content(props: &Props) -> Html {
                                 <div class="material-type">
                                     <label>
                                         <input type="radio" name="material" value="copper"
-                                            checked={props.state.material == "copper"}
-                                            onchange={props.handle_material_change.clone()}
+                                            onchange={handle_material_change()}
                                         />
                                         {"Латунь/Бронза/Медь"}
                                     </label>
@@ -113,8 +147,7 @@ pub fn main_content(props: &Props) -> Html {
                                 <div class="material-type">
                                     <label>
                                         <input type="radio" name="material" value="plastic"
-                                            checked={props.state.material == "plastic"}
-                                            onchange={props.handle_material_change.clone()}
+                                            onchange={handle_material_change()}
                                         />
                                         {"Пластик"}
                                     </label>
@@ -132,21 +165,19 @@ pub fn main_content(props: &Props) -> Html {
                             <h2>{"Выберите толщину материала"}</h2>
                             <div class="thickness-input-container">
                                 <input type="text" placeholder="Введите толщину в мм"
-                                    value={props.state.thickness.clone()}
-                                    onchange={props.handle_thickness_input.clone()}
+                                    onchange={handle_thickness_input(props.all_thicknesses.clone())}
                                 />
-                                <select onchange={props.handle_thickness_select.clone()}>
+                                <select onchange={handle_thickness_select()}>
                                     <option value="">{"Выберите толщину"}</option>
                                     {props.all_thicknesses.iter().map(|&thickness| {
                                         html! {
-                                            <option value={thickness.to_string()} 
-                                                selected={props.state.thickness == thickness.to_string()}>
+                                            <option value={thickness.to_string()}>
                                                 {format!("{} мм", thickness)}
                                             </option>
                                         }
                                     }).collect::<Html>()}
                                 </select>
-                                <button onclick={props.handle_clear_thickness.clone()} class="clear-button">
+                                <button onclick={handle_clear_thickness()} class="clear-button">
                                     {"Очистить"}
                                 </button>
                             </div>
@@ -158,54 +189,34 @@ pub fn main_content(props: &Props) -> Html {
                             <div class="input-mode-selector">
                                 <label>
                                     <input type="radio" name="input-mode" value="file"
-                                        checked={props.state.is_file_selected}
                                         onclick={
-                                            let handle_mode_change = props.handle_input_mode_change.clone();
-                                            Callback::from(move |_| handle_mode_change.emit("file".to_string()))
+                                            let handle_mode = handle_input_mode_change();
+                                            Callback::from(move |_| handle_mode.emit("file".to_string()))
                                         }
                                     />
                                     {"Выбрать файл"}
                                 </label>
                                 <label>
                                     <input type="radio" name="input-mode" value="manual"
-                                        checked={props.state.is_manual_input}
                                         onclick={
-                                            let handle_mode_change = props.handle_input_mode_change.clone();
-                                            Callback::from(move |_| handle_mode_change.emit("manual".to_string()))
+                                            let handle_mode = handle_input_mode_change();
+                                            Callback::from(move |_| handle_mode.emit("manual".to_string()))
                                         }
                                     />
                                     {"Ручной ввод"}
                                 </label>
                             </div>
                             <div class="file-input-container">
-                                {if props.state.is_file_selected {
-                                    html! {
-                                        <div class="file-input">
-                                            <input type="file" id="dxf-file" accept=".dxf"
-                                                onchange={props.handle_file_select.clone()}
-                                            />
-                                            <label for="dxf-file">{""}</label>
-                                        </div>
-                                    }
-                                } else {
-                                    html! {
-                                        <div class="manual-input-container">
-                                            <input type="text" placeholder="Введите длину реза в мм"
-                                                onchange={props.handle_cut_length_input.clone()}
-                                            />
-                                        </div>
-                                    }
-                                }}
-                                <div class="cut-length-display">
-                                    <span>{"Длинна реза
-                                     в мм: "}</span>
-                                    <span>
-                                        {if props.state.cut_length > 0.0 {
-                                            format!("{:.2} мм", props.state.cut_length)
-                                        } else {
-                                            "пусто".to_string()
-                                        }}
-                                    </span>
+                                <div class="file-input">
+                                    <input type="file" id="dxf-file" accept=".dxf"
+                                        onchange={handle_file_select()}
+                                    />
+                                    <label for="dxf-file">{""}</label>
+                                </div>
+                                <div class="manual-input-container">
+                                    <input type="text" placeholder="Введите длину реза в мм"
+                                        onchange={handle_cut_length_input()}
+                                    />
                                 </div>
                             </div>
                         </div>
@@ -215,163 +226,141 @@ pub fn main_content(props: &Props) -> Html {
 
             // Второй ряд: все четыре секции в одной строке
             <div class="row-2">
-            // Секция гибки
-            <div class="bending-section">
-                <h2>{"Места гибки"}</h2>
-                <div class="bending-points-options">
-                    <div class="radio-group">
-                        <label>
+                // Секция гибки
+                <div class="bending-section">
+                    <h2>{"Места гибки"}</h2>
+                    <div class="bending-points-options">
+                        <div class="radio-group">
+                            <label>
+                                <input 
+                                    type="radio"
+                                    name="bending-points"
+                                    value="no"
+                                    onchange={handle_bending_points_radio_change()}
+                                />
+                                {"Нет"}
+                            </label>
+                            <label>
+                                <input 
+                                    type="radio"
+                                    name="bending-points"
+                                    value="yes"
+                                    onchange={handle_bending_points_radio_change()}
+                                />
+                                {"Да"}
+                            </label>
+                        </div>
+                        <div class="number-input-container">
                             <input 
-                                type="radio"
-                                name="bending-points"
-                                value="no"
-                                checked={!props.state.bending_points_enabled}
-                                onchange={props.handle_bending_points_radio_change.clone()}
+                                type="number"
+                                placeholder="Количество"
+                                min="0"
+                                onchange={handle_bending_points_input_change()}
                             />
-                            {"Нет"}
-                        </label>
-                        <label>
-                            <input 
-                                type="radio"
-                                name="bending-points"
-                                value="yes"
-                                checked={props.state.bending_points_enabled}
-                                onchange={props.handle_bending_points_radio_change.clone()}
-                            />
-                            {"Да"}
-                        </label>
+                        </div>
                     </div>
-                    <div class="number-input-container">
-                        <input 
-                            type="number"
-                            placeholder="Количество"
-                            min="0"
-                            value={props.state.bending_points_count.map_or("".to_string(), |v| v.to_string())}
-                            disabled={!props.state.bending_points_enabled}
-                            onchange={props.handle_bending_points_input_change.clone()}
-                        />
+                </div>
+
+                // Секция резьбы
+                <div class="threads-section">
+                    <h2>{r"Резьба \ вставки \ цековки"}</h2>
+                    <div class="threads-inserts-mats-options">
+                        <div class="radio-group">
+                            <label>
+                                <input 
+                                    type="radio"
+                                    name="threads-inserts-mats"
+                                    value="no"
+                                    onchange={handle_threads_inserts_mats_radio_change()}
+                                />
+                                {"Нет"}
+                            </label>
+                            <label>
+                                <input 
+                                    type="radio"
+                                    name="threads-inserts-mats"
+                                    value="yes"
+                                    onchange={handle_threads_inserts_mats_radio_change()}
+                                />
+                                {"Да"}
+                            </label>
+                        </div>
+                        <div class="number-input-container">
+                            <input 
+                                type="number"
+                                placeholder="Количество"
+                                min="0"
+                                onchange={handle_threads_inserts_mats_input_change()}
+                            />
+                        </div>
+                    </div>
+                </div>
+
+                // Секция других опций
+                <div class="other-options">
+                    <h2>{"Дополнительные параметры"}</h2>
+                    <div class="options-content">
+                        // Первая строка: количество и стоимость
+                        <div class="options-row">
+                            <div class="input-group">
+                                <label for="parts-count">{"Количество:"}</label>
+                                <input 
+                                    type="text" 
+                                    onchange={handle_parts_count_change()} 
+                                />
+                            </div>
+                            <div class="input-group">
+                                <label for="material-price">{"Стоимость (€):"}</label>
+                                <input 
+                                    type="text"
+                                    placeholder="Цена"  
+                                    onchange={handle_material_price_change()} 
+                                />
+                            </div>
+                        </div>
+                        // Вторая строка: маржа и кнопка очистить
+                        <div class="options-row">
+                            <div class="input-group">
+                                <label for="margin">{"Маржа (%):"}</label>
+                                <input 
+                                    type="text" 
+                                    onchange={handle_margin_change()} 
+                                />
+                            </div>
+                            <button 
+                                class="clear-button" 
+                                onclick={handle_clear_options()}
+                            >
+                                {"Очистить"}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                // Секция результатов
+                <div class="results-section">
+                    <h2>{"Результаты расчета"}</h2>
+                    <div class="results-content">
+                        <div class="result-group">
+                            <label>{"Цена за деталь (€):"}</label>
+                            <div class="result-value" id="price-per-part">
+                                {format!("{:.2}", *price_per_part)}
+                            </div>
+                        </div>
+                        <div class="result-group">
+                            <label>{"Цена за партию (€):"}</label>
+                            <div class="result-value" id="price-total">
+                                {format!("{:.2}", *price_total)}
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            // Секция резьбы
-            <div class="threads-section">
-                <h2>{r"Резьба \ вставки \ цековки"}</h2>
-                <div class="threads-inserts-mats-options">
-                    <div class="radio-group">
-                        <label>
-                            <input 
-                                type="radio"
-                                name="threads-inserts-mats"
-                                value="no"
-                                checked={!props.state.threads_inserts_mats_enabled}
-                                onchange={props.handle_threads_inserts_mats_radio_change.clone()}
-                            />
-                            {"Нет"}
-                        </label>
-                        <label>
-                            <input 
-                                type="radio"
-                                name="threads-inserts-mats"
-                                value="yes"
-                                checked={props.state.threads_inserts_mats_enabled}
-                                onchange={props.handle_threads_inserts_mats_radio_change.clone()}
-                            />
-                            {"Да"}
-                        </label>
-                    </div>
-                    <div class="number-input-container">
-                        <input 
-                            type="number"
-                            placeholder="Количество"
-                            min="0"
-                            value={props.state.threads_inserts_mats_count.map_or("".to_string(), |v| v.to_string())}
-                            disabled={!props.state.threads_inserts_mats_enabled}
-                            onchange={props.handle_threads_inserts_mats_input_change.clone()}
-                        />
-                    </div>
-                </div>
-            </div>
-
-            // Секция других опций
-            <div class="other-options">
-                <h2>{"Дополнительные параметры"}</h2>
-                <div class="options-content">
-                    // Первая строка: количество и стоимость
-                    <div class="options-row">
-                        <div class="input-group">
-                            <label for="parts-count">{"Количество:"}</label>
-                            <input 
-                                type="text" 
-                                value={props.state.parts_count.to_string()} 
-                                onchange={props.handle_parts_count_change.clone()} 
-                            />
-                        </div>
-                        <div class="input-group">
-                            <label for="material-price">{"Стоимость (€):"}</label>
-                            <input 
-                                type="text"
-                                placeholder="Цена"  
-                                value={props.state.material_price.to_string()}
-                                onchange={props.handle_material_price_change.clone()} 
-                            />
-                        </div>
-                    </div>
-                    // Вторая строка: маржа и кнопка очистить
-                    <div class="options-row">
-                        <div class="input-group">
-                            <label for="margin">{"Маржа (%):"}</label>
-                            <input 
-                                type="text" 
-                                value={props.state.margin.to_string()}
-                                onchange={props.handle_margin_change.clone()} 
-                            />
-                        </div>
-                        <button 
-                            class="clear-button" 
-                            onclick={props.handle_clear_options.clone()}
-                        >
-                            {"Очистить"}
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            // Секция результатов
-            <div class="results-section">
-                <h2>{"Результаты расчета"}</h2>
-                <div class="results-content">
-                    <div class="result-group">
-                        <label>{"Цена за деталь (€):"}</label>
-                        <div class="result-value" id="price-per-part">
-                            {format!("{:.2}", props.state.price_per_part)}
-                        </div>
-                    </div>
-                    <div class="result-group">
-                        <label>{"Цена за партию (€):"}</label>
-                        <div class="result-value" id="price-total">
-                            {format!("{:.2}", props.state.price_total)}
-                        </div>
-                    </div>
-                </div>
-            </div>
-            </div>
-
-            
-
-            // Информационный блок
+            // Информационный блок (можно заменить на консоль или убрать)
             <div class="info-box">
                 <h2>{"Информация"}</h2>
-                <div class="history-list">
-                    {if props.state.history.is_empty() {
-                        html! { <p class="empty-history">{"История пуста"}</p> }
-                    } else {
-                        props.state.history.iter().map(|message| {
-                            html! {
-                                <p key={message.clone()}>{message}</p>
-                            }
-                        }).collect::<Html>()
-                    }}
+                <div class="console-log">
+                    <p>{"Консоль браузера содержит информацию о действиях и ошибках"}</p>
                 </div>
             </div>
         </main>

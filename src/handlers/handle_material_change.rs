@@ -1,20 +1,8 @@
 use web_sys::{Event, HtmlInputElement};
 use yew::prelude::*;
-use wasm_bindgen::prelude::*;
-use serde::{Serialize, Deserialize};
-use crate::models::{AppState, AppAction};
 use wasm_bindgen_futures::spawn_local;
-
-#[wasm_bindgen]
-extern "C" {
-    #[wasm_bindgen(js_namespace = ["window", "__TAURI__", "tauri"])]
-    async fn invoke(cmd: &str, args: JsValue) -> JsValue;
-}
-
-#[derive(Serialize, Deserialize)]
-pub struct SetMaterialArgs {
-    pub material_type: String,
-}
+use crate::tauri_api::set_type_material;
+use crate::tauri_api::update_prices;
 
 // Структура для хранения информации о материалах
 struct MaterialInfo {
@@ -22,9 +10,7 @@ struct MaterialInfo {
     description: &'static str,
 }
 
-pub fn handle_material_change(
-    state: UseReducerHandle<AppState>,
-) -> Callback<Event> {
+pub fn handle_material_change() -> Callback<Event> {
     Callback::from(move |e: Event| {
         let target = e.target_dyn_into::<HtmlInputElement>().unwrap();
         let value = target.value();
@@ -32,23 +18,23 @@ pub fn handle_material_change(
         // Получаем информацию о материале
         let material_info = match value.as_str() {
             "aluminum" => MaterialInfo { 
-                code: "AL", 
+                code: "aluminum", 
                 description: "Алюминий" 
             },
             "steel" => MaterialInfo { 
-                code: "ST", 
+                code: "steel", 
                 description: "Сталь" 
             },
             "stainless" => MaterialInfo { 
-                code: "SS", 
+                code: "stainless", 
                 description: "Нержавеющая сталь" 
             },
             "copper" => MaterialInfo { 
-                code: "COP", 
+                code: "copper", 
                 description: "Латунь/Бронза/Медь" 
             },
             "plastic" => MaterialInfo { 
-                code: "PLA", 
+                code: "plastic", 
                 description: "Пластик" 
             },
             _ => MaterialInfo { 
@@ -57,53 +43,40 @@ pub fn handle_material_change(
             },
         };
 
-        // Обновляем состояние через редуктор
-        state.dispatch(AppAction::SetMaterial(value.clone()));
-        state.dispatch(AppAction::AddHistoryMessage(
-            format!("Выбран материал: {}", material_info.description)
-        ));
+        // Выводим сообщение в консоль
+        web_sys::console::log_1(
+            &format!("Выбран материал: {}", material_info.description).into()
+        );
 
-        // Проверяем, доступен ли Tauri API
-        let is_tauri_available = web_sys::window()
-            .and_then(|win| js_sys::Reflect::get(&win, &JsValue::from_str("__TAURI__")).ok())
-            .map(|tauri| !tauri.is_undefined() && !tauri.is_null())
-            .unwrap_or(false);
+        // Отправляем информацию о материале на бэкенд через Tauri API
+        let material_code = material_info.code.to_string();
+        let material_desc = material_info.description.to_string();
         
-        if is_tauri_available {
-            // Отправляем информацию о материале на бэкенд через Tauri
-            let args = SetMaterialArgs {
-                material_type: material_info.code.to_string(),
-            };
-            let state_clone = state.clone();
-            
-            spawn_local(async move {
-                match serde_wasm_bindgen::to_value(&args) {
-                    Ok(args_js) => {
-                        let result = invoke("set_type_material", args_js).await;
-                        if result.is_undefined() {
-                            // Логируем ошибку в консоль
-                            web_sys::console::error_1(
-                                &format!("Ошибка при установке материала {} в backend", args.material_type).into()
-                            );
-                            // Отправляем сообщение об ошибке
-                            state_clone.dispatch(AppAction::AddHistoryMessage(
-                                format!("Ошибка: не удалось установить материал {} в системе", args.material_type)
-                            ));
-                        }
-                    },
-                    Err(e) => {
-                        web_sys::console::error_1(
-                            &format!("Ошибка сериализации данных: {:?}", e).into()
-                        );
-                    }
+        spawn_local(async move {
+            match set_type_material(material_code.clone()).await {
+                Ok(_) => {
+                    web_sys::console::log_1(
+                        &format!("Материал {} успешно установлен в системе", material_desc).into()
+                    );
+                },
+                Err(e) => {
+                    web_sys::console::error_1(
+                        &format!("Ошибка при установке материала {}: {:?}", material_desc, e).into()
+                    );
                 }
-            });
-        } else {
-            // Если Tauri недоступен, просто выводим сообщение
-            web_sys::console::log_1(&"Tauri API недоступен, работаем в режиме веб-приложения".into());
-            state.dispatch(AppAction::AddHistoryMessage(
-                format!("Материал {} установлен (режим веб-приложения)", material_info.description)
-            ));
-        }
+            }
+        });
+        
+        // Обновляем цены
+        spawn_local(async move {
+            match update_prices().await {
+                Ok(_) => {
+                    web_sys::console::log_1(&"Цены успешно обновлены".into());
+                },
+                Err(e) => {
+                    web_sys::console::error_1(&format!("Ошибка обновления цен: {:?}", e).into());
+                }
+            }
+        });
     })
 }

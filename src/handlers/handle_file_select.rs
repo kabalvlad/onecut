@@ -3,19 +3,12 @@ use web_sys::{Event, FileReader, HtmlInputElement};
 use wasm_bindgen::{JsCast, closure::Closure};
 use wasm_bindgen_futures::spawn_local;
 use js_sys::ArrayBuffer;
-use crate::models::{FileData, AppState, AppAction};
-use serde::{Serialize, Deserialize};
+use crate::models::FileData;
 use crate::dxf::dxf_processor::calculate_dxf_length;
+use crate::tauri_api::set_cut_length;
+use crate::tauri_api::update_prices;
 
-#[derive(Debug, Serialize, Deserialize)]
-pub struct DxfCalculationResult {
-    pub total_length: f64,
-    pub error: Option<String>,
-}
-
-pub fn handle_file_select(
-    state: UseReducerHandle<AppState>,
-) -> Callback<Event> {
+pub fn handle_file_select() -> Callback<Event> {
     Callback::from(move |event: Event| {
         let input: HtmlInputElement = event.target_unchecked_into();
 
@@ -24,65 +17,70 @@ pub fn handle_file_select(
                 let file_name = file.name();
 
                 if !file_name.to_lowercase().ends_with(".dxf") {
-                    state.dispatch(AppAction::AddHistoryMessage(
-                        "Неверный формат файла. Пожалуйста, загрузите файл формата - DXF/dxf".to_string()
-                    ));
+                    web_sys::console::error_1(
+                        &"Неверный формат файла. Пожалуйста, загрузите файл формата - DXF/dxf".into()
+                    );
                     return;
                 }
 
-                state.dispatch(AppAction::AddHistoryMessage("Формат файла верный".to_string()));
+                web_sys::console::log_1(&"Формат файла верный".into());
 
-                let state = state.clone();
                 spawn_local(async move {
                     let reader = FileReader::new().unwrap();
                     let reader_clone = reader.clone();
 
-                    let onload = {
-                        let state = state.clone();
-                        let file_name = file_name.clone();
-                        
-                        Closure::wrap(Box::new(move |_: web_sys::Event| {
-                            if let Ok(buffer) = reader_clone.result() {
-                                if let Ok(array_buffer) = buffer.dyn_into::<ArrayBuffer>() {
-                                    let bytes = js_sys::Uint8Array::new(&array_buffer).to_vec();
-                                
-                                    match String::from_utf8(bytes) {
-                                        Ok(content) => {
-                                            let file_data_obj = FileData {
-                                                name: file_name.clone(),
-                                                content: content.clone(),
-                                            };
+                    let onload = Closure::wrap(Box::new(move |_: web_sys::Event| {
+                        if let Ok(buffer) = reader_clone.result() {
+                            if let Ok(array_buffer) = buffer.dyn_into::<ArrayBuffer>() {
+                                let bytes = js_sys::Uint8Array::new(&array_buffer).to_vec();
+                            
+                                match String::from_utf8(bytes) {
+                                    Ok(content) => {
+                                        let file_data_obj = FileData {
+                                            name: file_name.clone(),
+                                            content: content.clone(),
+                                        };
 
-                                            // Просто передаем объект в функцию расчета длины
-                                            match calculate_dxf_length(file_data_obj) {
-                                                Ok(result) => {
-                                                    state.dispatch(AppAction::AddHistoryMessage(
-                                                        format!("Общая длина всех линий: {:.2} мм", result)
-                                                    ));
+                                        // Передаем объект в функцию расчета длины
+                                        match calculate_dxf_length(file_data_obj) {
+                                            Ok(result) => {
+                                                web_sys::console::log_1(
+                                                    &format!("Общая длина всех линий: {:.2} мм", result).into()
+                                                );
 
-                                                    state.dispatch(AppAction::SetCutLength(result as f32));
-
-                                                    state.dispatch(AppAction::AddHistoryMessage(
-                                                        format!("Длина реза установлена: {:.2} мм", result)
-                                                    ));
-                                                },
-                                                Err(err) => {
-                                                    state.dispatch(AppAction::AddHistoryMessage(
-                                                        format!("Ошибка при расчете длины: {}", err)
-                                                    ));
-                                                }
+                                                // Отправляем длину реза в бэкенд через Tauri API
+                                                let cut_length = result as f32;
+                                                spawn_local(async move {
+                                                    match set_cut_length(cut_length).await {
+                                                        Ok(_) => {
+                                                            web_sys::console::log_1(
+                                                                &format!("Длина реза установлена: {:.2} мм", cut_length).into()
+                                                            );
+                                                        },
+                                                        Err(e) => {
+                                                            web_sys::console::error_1(
+                                                                &format!("Ошибка при установке длины реза: {:?}", e).into()
+                                                            );
+                                                        }
+                                                    }
+                                                });
+                                            },
+                                            Err(err) => {
+                                                web_sys::console::error_1(
+                                                    &format!("Ошибка при расчете длины: {}", err).into()
+                                                );
                                             }
                                         }
-                                        Err(_) => {
-                                            state.dispatch(AppAction::AddHistoryMessage(
-                                                "Ошибка при чтении содержимого файла".to_string()
-                                            ));
-                                        }
+                                    }
+                                    Err(_) => {
+                                        web_sys::console::error_1(
+                                            &"Ошибка при чтении содержимого файла".into()
+                                        );
                                     }
                                 }
                             }
-                        }) as Box<dyn FnMut(_)>)
-                    };
+                        }
+                    }) as Box<dyn FnMut(_)>);
 
                     reader.set_onload(Some(onload.as_ref().unchecked_ref()));
                     onload.forget();
@@ -90,5 +88,13 @@ pub fn handle_file_select(
                 });
             }
         }
+        // В конце обработчика
+        spawn_local(async {
+            if let Err(e) = update_prices().await {
+                web_sys::console::error_1(
+                    &format!("Не удалось обновить цены: {:?}", e).into()
+                );
+            }
+        });
     })
 }

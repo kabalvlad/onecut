@@ -1,24 +1,10 @@
 use yew::prelude::*;
-use wasm_bindgen::JsValue;
-use serde::{Serialize, Deserialize};
 use web_sys::{Event, HtmlInputElement};
-use wasm_bindgen::prelude::wasm_bindgen;
-use crate::models::{AppState, AppAction};
+use crate::tauri_api::set_threads_inserts_mats;
+use wasm_bindgen_futures::spawn_local;
+use crate::tauri_api::update_prices;
 
-#[derive(Serialize, Deserialize)]
-pub struct SetThreadsInsertsMatsArgs {
-    pub threads_inserts_mats: i32,
-}
-
-#[wasm_bindgen]
-extern "C" {
-    #[wasm_bindgen(js_namespace = ["window", "__TAURI__", "tauri"])]
-    async fn invoke(cmd: &str, args: JsValue) -> JsValue;
-}
-
-pub fn handle_threads_inserts_mats_input_change(
-    state: UseReducerHandle<AppState>,
-) -> Callback<Event> {
+pub fn handle_threads_inserts_mats_input_change() -> Callback<Event> {
     Callback::from(move |e: Event| {
         let target = e.target_dyn_into::<HtmlInputElement>().unwrap();
         let value = target.value();
@@ -31,44 +17,51 @@ pub fn handle_threads_inserts_mats_input_change(
         match value.parse::<i32>() {
             Ok(points) => {
                 if points >= 0 {
-                    // Обновляем количество точек через dispatch
-                    state.dispatch(AppAction::SetThreadsInsertsMats { 
-                        enabled: true, 
-                        count: Some(points) 
-                    });
-                    
-                    // Сразу выводим сообщение о установке точек
-                    state.dispatch(AppAction::AddHistoryMessage(
-                        format!("Установлено количество резьбы/вставок/цековок: {}", points)
-                    ));
+                    // Выводим сообщение в консоль
+                    web_sys::console::log_1(&format!(
+                        "Установлено количество резьбы/вставок/цековок: {}", 
+                        points
+                    ).into());
 
-                    // Отправляем данные на бэкенд
-                    let args = SetThreadsInsertsMatsArgs { 
-                        threads_inserts_mats: points 
-                    };
-                    
-                    wasm_bindgen_futures::spawn_local(async move {
-                        let args = match serde_wasm_bindgen::to_value(&args) {
-                            Ok(args) => args,
-                            Err(_) => return, // Просто выходим в случае ошибки сериализации
-                        };
-                        
-                        // Просто вызываем бэкенд без дополнительных сообщений об успехе
-                        let _ = invoke("set_threads_inserts_mats", args).await;
+                    // Создаем вектор с заданным количеством точек
+                    let mats_vec = vec![1; points as usize];
+
+                    spawn_local(async move {
+                        match set_threads_inserts_mats(mats_vec).await {
+                            Ok(_) => {
+                                web_sys::console::log_1(&"Успешно отправлено на бэкенд".into());
+                            },
+                            Err(e) => {
+                                web_sys::console::error_1(&format!(
+                                    "Ошибка при установке резьбы/вставок/цековок: {:?}", 
+                                    e
+                                ).into());
+                            }
+                        }
                     });
                 } else {
                     // Отрицательное значение
-                    state.dispatch(AppAction::AddHistoryMessage(
-                        "Ошибка: количество резьбы/вставок/цековок не может быть отрицательным".to_string()
-                    ));
+                    web_sys::console::error_1(
+                        &"Ошибка: количество резьбы/вставок/цековок не может быть отрицательным"
+                        .into()
+                    );
                 }
             },
             Err(_) => {
                 // Некорректное числовое значение
-                state.dispatch(AppAction::AddHistoryMessage(
-                    format!("Ошибка: '{}' не является корректным числовым значением", value)
-                ));
+                web_sys::console::error_1(
+                    &format!("Ошибка: '{}' не является корректным числовым значением", value)
+                    .into()
+                );
             }
         }
+        // В конце обработчика
+        spawn_local(async {
+            if let Err(e) = update_prices().await {
+                web_sys::console::error_1(
+                    &format!("Не удалось обновить цены: {:?}", e).into()
+                );
+            }
+        });
     })
 }

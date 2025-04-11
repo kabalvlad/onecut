@@ -14,11 +14,7 @@ mod clear_handlers;
 mod handle_margin_change;
 mod handle_material_price_change;
 mod handle_parts_count_change;
-mod handle_get_price_one_part;
-mod handle_get_price_all_parts;
 
-pub use handle_get_price_all_parts::handle_get_price_all_parts;
-pub use handle_get_price_one_part::handle_get_price_one_part;
 pub use handle_parts_count_change::handle_parts_count_change;
 pub use handle_material_price_change::handle_material_price_change;
 pub use handle_margin_change::handle_margin_change;
