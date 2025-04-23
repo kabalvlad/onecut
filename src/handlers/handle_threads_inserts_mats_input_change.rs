@@ -1,8 +1,8 @@
 use yew::prelude::*;
 use web_sys::{Event, HtmlInputElement};
-use crate::tauri_api::set_threads_inserts_mats;
+use crate::bridge::set_threads_inserts_mats;
 use wasm_bindgen_futures::spawn_local;
-use crate::tauri_api::update_prices;
+use crate::bridge::update_prices;
 
 pub fn handle_threads_inserts_mats_input_change() -> Callback<Event> {
     Callback::from(move |e: Event| {
@@ -27,7 +27,7 @@ pub fn handle_threads_inserts_mats_input_change() -> Callback<Event> {
                     let mats_vec = vec![1; points as usize];
 
                     spawn_local(async move {
-                        match set_threads_inserts_mats(mats_vec).await {
+                        match set_threads_inserts_mats(mats_vec.into()).await {
                             Ok(_) => {
                                 web_sys::console::log_1(&"Успешно отправлено на бэкенд".into());
                             },
@@ -56,11 +56,14 @@ pub fn handle_threads_inserts_mats_input_change() -> Callback<Event> {
             }
         }
         // В конце обработчика
-        spawn_local(async {
-            if let Err(e) = update_prices().await {
-                web_sys::console::error_1(
-                    &format!("Не удалось обновить цены: {:?}", e).into()
-                );
+        spawn_local(async move {
+            match update_prices().await {
+                Ok(_) => {
+                    web_sys::console::log_1(&"Цены успешно обновлены".into());
+                },
+                Err(e) => {
+                    web_sys::console::error_1(&format!("Ошибка обновления цен: {:?}", e).into());
+                }
             }
         });
     })

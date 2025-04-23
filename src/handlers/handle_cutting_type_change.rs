@@ -1,8 +1,8 @@
 use web_sys::{Event, HtmlInputElement};
 use yew::prelude::*;
 use wasm_bindgen_futures::spawn_local;
-use crate::tauri_api::set_type_cutting;
-use crate::tauri_api::update_prices;
+use crate::bridge::set_type_cutting;
+use crate::bridge::update_prices;
 
 //===============================================================
 // Обработчик для выбора типа резки
@@ -23,7 +23,7 @@ pub fn handle_cutting_type_change() -> Callback<Event> {
         
         // Выводим сообщение в консоль
         web_sys::console::log_1(
-            &format!("Выбран тип резки: {}", cutting_description).into()
+            &format!("Выбран тип резки: {} ЭТО СООБЩЕНИЕ ИЗ САМОГО ОБОРАБОТЧИКА ИГНОР ИХ", cutting_description).into()
         );
         
         // Отправляем информацию о типе резки на бэкенд через Tauri API
@@ -34,7 +34,7 @@ pub fn handle_cutting_type_change() -> Callback<Event> {
             match set_type_cutting(cutting_code_clone.clone()).await {
                 Ok(_) => {
                     web_sys::console::log_1(
-                        &format!("Тип резки {} успешно установлен в системе", cutting_desc_clone).into()
+                        &format!("Тип резки {} успешно установлен в системе (ЭТО СООБЩЕНИЕ ИЗ САМОГО ОБОРАБОТЧИКА ИГНОР ИХ)", cutting_desc_clone).into()
                     );
                 },
                 Err(e) => {
@@ -44,12 +44,14 @@ pub fn handle_cutting_type_change() -> Callback<Event> {
                 }
             }
         });
-        // В конце обработчика
-        spawn_local(async {
-            if let Err(e) = update_prices().await {
-                web_sys::console::error_1(
-                    &format!("Не удалось обновить цены: {:?}", e).into()
-                );
+        spawn_local(async move {
+            match update_prices().await {
+                Ok(_) => {
+                    web_sys::console::log_1(&"Цены успешно обновлены(ЭТО СООБЩЕНИЕ ИЗ САМОГО ОБОРАБОТЧИКА ИГНОР ИХ)".into());
+                },
+                Err(e) => {
+                    web_sys::console::error_1(&format!("Ошибка обновления цен: {:?}", e).into());
+                }
             }
         });
     })

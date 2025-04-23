@@ -2,8 +2,8 @@ use web_sys::{Event, HtmlInputElement};
 use yew::prelude::*;
 use std::str::FromStr;
 use wasm_bindgen_futures::spawn_local;
-use crate::tauri_api::set_thickness;
-use crate::tauri_api::update_prices;
+use crate::bridge::set_thickness;
+use crate::bridge::update_prices;
 
 pub fn handle_thickness_input(
     all_thicknesses: Vec<f32>,
@@ -79,12 +79,14 @@ pub fn handle_thickness_input(
                 );
             }
         }
-        // В конце обработчика
-        spawn_local(async {
-            if let Err(e) = update_prices().await {
-                web_sys::console::error_1(
-                    &format!("Не удалось обновить цены: {:?}", e).into()
-                );
+        spawn_local(async move {
+            match update_prices().await {
+                Ok(_) => {
+                    web_sys::console::log_1(&"Цены успешно обновлены".into());
+                },
+                Err(e) => {
+                    web_sys::console::error_1(&format!("Ошибка обновления цен: {:?}", e).into());
+                }
             }
         });
     })

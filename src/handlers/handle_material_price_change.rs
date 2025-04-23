@@ -1,7 +1,8 @@
 use web_sys::{Event, HtmlInputElement};
 use yew::prelude::*;
 use wasm_bindgen_futures::spawn_local;
-use crate::tauri_api::{set_cost_material, get_cost_material, update_prices};
+use crate::bridge::{set_cost_material, get_cost_material, update_prices};
+
 
 pub fn handle_material_price_change() -> Callback<Event> {
     Callback::from(move |e: Event| {
@@ -56,8 +57,18 @@ pub fn handle_material_price_change() -> Callback<Event> {
                 // Получаем последнее корректное значение из бэкенда и обновляем поле ввода
                 spawn_local(async move {
                     match get_cost_material().await {
-                        Ok(price) => {
-                            input.set_value(&format!("{:.2}", price));
+                        Ok(js_value) => {
+                            // Преобразуем JsValue в f32
+                            if let Some(price) = js_value.as_f64() {
+                                let price_f32 = price as f32;
+                                input.set_value(&format!("{:.2}", price_f32));
+                            } else {
+                                // Если не удалось преобразовать, устанавливаем значение по умолчанию
+                                web_sys::console::error_1(
+                                    &"Ошибка преобразования цены материала".into()
+                                );
+                                input.set_value("0.00");
+                            }
                         },
                         Err(e) => {
                             web_sys::console::error_1(
@@ -71,11 +82,14 @@ pub fn handle_material_price_change() -> Callback<Event> {
             }
         }
         // В конце обработчика
-        spawn_local(async {
-            if let Err(e) = update_prices().await {
-                web_sys::console::error_1(
-                    &format!("Не удалось обновить цены: {:?}", e).into()
-                );
+        spawn_local(async move {
+            match update_prices().await {
+                Ok(_) => {
+                    web_sys::console::log_1(&"Цены успешно обновлены".into());
+                },
+                Err(e) => {
+                    web_sys::console::error_1(&format!("Ошибка обновления цен: {:?}", e).into());
+                }
             }
         });
     })

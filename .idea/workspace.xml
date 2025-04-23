@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="ALL" />
+  </component>
+  <component name="CargoProjects">
+    <cargoProject FILE="$PROJECT_DIR$/Cargo.toml">
+      <package file="$PROJECT_DIR$/src-tauri">
+        <enabledFeature name="default" />
+      </package>
+      <package file="$PROJECT_DIR$">
+        <enabledFeature name="default" />
+      </package>
+    </cargoProject>
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="76abaee8-01de-4438-b30b-a939a6e3e7e7" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.taurignore" beforeDir="false" afterPath="$PROJECT_DIR$/.taurignore" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/434.rs" beforeDir="false" afterPath="$PROJECT_DIR$/434.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/Cargo.toml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src-tauri/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/src-tauri/Cargo.toml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src-tauri/src/cutting_data/laser_cutting_speeds.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src-tauri/src/cutting_data/laser_cutting_speeds.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src-tauri/src/cutting_data/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src-tauri/src/cutting_data/mod.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src-tauri/src/lib.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src-tauri/src/lib.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src-tauri/src/price_calculator.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src-tauri/src/price_calculator.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src-tauri/src/state.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src-tauri/src/state.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src-tauri/tauri.conf.json" beforeDir="false" afterPath="$PROJECT_DIR$/src-tauri/tauri.conf.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/main_content.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/main_content.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/handlers/clear_handlers.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/handlers/clear_handlers.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/handlers/handle_bending_points_input_change.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/handlers/handle_bending_points_input_change.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/handlers/handle_clear_thickness.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/handlers/handle_clear_thickness.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/handlers/handle_cut_length_input.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/handlers/handle_cut_length_input.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/handlers/handle_cutting_type_change.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/handlers/handle_cutting_type_change.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/handlers/handle_file_select.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/handlers/handle_file_select.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/handlers/handle_margin_change.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/handlers/handle_margin_change.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/handlers/handle_material_change.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/handlers/handle_material_change.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/handlers/handle_material_price_change.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/handlers/handle_material_price_change.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/handlers/handle_parts_count_change.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/handlers/handle_parts_count_change.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/handlers/handle_thickness_input.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/handlers/handle_thickness_input.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/handlers/handle_thickness_select.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/handlers/handle_thickness_select.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/handlers/handle_threads_inserts_mats_input_change.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/handlers/handle_threads_inserts_mats_input_change.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/tauri_api.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/tauri_api.rs" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="ExecutionTargetManager" SELECTED_TARGET="RsBuildProfile:dev" />
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="MacroExpansionManager">
+    <option name="directoryName" value="TPLsEVpX" />
+  </component>
+  <component name="ProjectColorInfo"><![CDATA[{
+  "associatedIndex": 5
+}]]></component>
+  <component name="ProjectId" id="2w4qiF1X13E6lGX50LFPIza330m" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.rust.reset.selective.auto.import": "true",
+    "git-widget-placeholder": "0.1",
+    "nodejs_package_manager_path": "npm",
+    "org.rust.cargo.project.model.PROJECT_DISCOVERY": "true",
+    "org.rust.first.attach.projects": "true",
+    "settings.editor.selected.configurable": "preferences.sourceCode.Rust",
+    "vue.rearranger.settings.migration": "true"
+  }
+}]]></component>
+  <component name="RunManager" selected="Cargo.Run onecut_ui">
+    <configuration name="Run onecut" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
+      <option name="command" value="run --package onecut --bin onecut" />
+      <option name="workingDirectory" value="file://$PROJECT_DIR$" />
+      <envs />
+      <option name="emulateTerminal" value="true" />
+      <option name="channel" value="DEFAULT" />
+      <option name="requiredFeatures" value="true" />
+      <option name="allFeatures" value="false" />
+      <option name="withSudo" value="false" />
+      <option name="buildTarget" value="REMOTE" />
+      <option name="backtrace" value="SHORT" />
+      <option name="isRedirectInput" value="false" />
+      <option name="redirectInputPath" value="" />
+      <method v="2">
+        <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="Run onecut_ui" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
+      <option name="buildProfileId" value="dev" />
+      <option name="command" value="run --package onecut_ui --bin onecut_ui" />
+      <option name="workingDirectory" value="file://$PROJECT_DIR$" />
+      <envs />
+      <option name="emulateTerminal" value="true" />
+      <option name="channel" value="DEFAULT" />
+      <option name="requiredFeatures" value="true" />
+      <option name="allFeatures" value="false" />
+      <option name="withSudo" value="false" />
+      <option name="buildTarget" value="REMOTE" />
+      <option name="backtrace" value="SHORT" />
+      <option name="isRedirectInput" value="false" />
+      <option name="redirectInputPath" value="" />
+      <method v="2">
+        <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="Test onecut_ui" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
+      <option name="command" value="test --workspace" />
+      <option name="workingDirectory" value="file://$PROJECT_DIR$" />
+      <envs />
+      <option name="emulateTerminal" value="true" />
+      <option name="channel" value="DEFAULT" />
+      <option name="requiredFeatures" value="true" />
+      <option name="allFeatures" value="false" />
+      <option name="withSudo" value="false" />
+      <option name="buildTarget" value="REMOTE" />
+      <option name="backtrace" value="SHORT" />
+      <option name="isRedirectInput" value="false" />
+      <option name="redirectInputPath" value="" />
+      <method v="2">
+        <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
+      </method>
+    </configuration>
+  </component>
+  <component name="RustProjectSettings">
+    <option name="toolchainHomeDirectory" value="$USER_HOME$/.cargo/bin" />
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="76abaee8-01de-4438-b30b-a939a6e3e7e7" name="Changes" comment="" />
+      <created>1745311319986</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1745311319986</updated>
+      <workItem from="1745311322641" duration="576000" />
+    </task>
+    <servers />
+  </component>
+  <component name="XSLT-Support.FileAssociations.UIState">
+    <expand />
+    <select />
+  </component>
+</project>

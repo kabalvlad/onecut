@@ -1,6 +1,6 @@
 use yew::prelude::*;
 use wasm_bindgen_futures::spawn_local;
-use crate::tauri_api::{set_quantity_parts, set_cost_material, set_margin_deal, update_prices};
+use crate::bridge::{set_quantity_parts, set_cost_material, set_margin_deal, update_prices};
 
 // Обработчик для очистки полей расчета стоимости
 pub fn handle_clear_options() -> Callback<MouseEvent> {
@@ -60,11 +60,14 @@ pub fn handle_clear_options() -> Callback<MouseEvent> {
             }
         });
         // В конце обработчика
-        spawn_local(async {
-            if let Err(e) = update_prices().await {
-                web_sys::console::error_1(
-                    &format!("Не удалось обновить цены: {:?}", e).into()
-                );
+        spawn_local(async move {
+            match update_prices().await {
+                Ok(_) => {
+                    web_sys::console::log_1(&"Цены успешно обновлены".into());
+                },
+                Err(e) => {
+                    web_sys::console::error_1(&format!("Ошибка обновления цен: {:?}", e).into());
+                }
             }
         });
     })

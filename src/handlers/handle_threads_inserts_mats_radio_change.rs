@@ -1,8 +1,8 @@
 use yew::prelude::*;
 use web_sys::{Event, HtmlInputElement};
-use crate::tauri_api::set_threads_inserts_mats;
+use crate::bridge::set_threads_inserts_mats;
 use wasm_bindgen_futures::spawn_local;
-use crate::tauri_api::update_prices;
+use crate::bridge::update_prices;
 
 pub fn handle_threads_inserts_mats_radio_change() -> Callback<Event> {
     Callback::from(move |e: Event| {
@@ -12,7 +12,7 @@ pub fn handle_threads_inserts_mats_radio_change() -> Callback<Event> {
         spawn_local(async move {
             if value == "no" {
                 // Если выбрано "нет", отправляем пустой вектор (нет резьб/вставок/цековок)
-                match set_threads_inserts_mats(vec![]).await {
+                match set_threads_inserts_mats(vec![].into()).await {
                     Ok(_) => {
                         web_sys::console::log_1(
                             &"Резьбы/вставки/цековки отключены".into()
@@ -31,7 +31,7 @@ pub fn handle_threads_inserts_mats_radio_change() -> Callback<Event> {
             } else {
                 // Если выбрано "да", отправляем вектор с одним элементом
                 // Это показывает, что резьбы/вставки/цековки включены, но количество пока не задано
-                match set_threads_inserts_mats(vec![0]).await {
+                match set_threads_inserts_mats(vec![0].into()).await {
                     Ok(_) => {
                         web_sys::console::log_1(
                             &"Резьбы/вставки/цековки включены, ожидание ввода количества".into()

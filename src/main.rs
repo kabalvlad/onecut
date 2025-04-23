@@ -4,7 +4,7 @@ pub mod handlers;
 pub mod components;
 pub mod dxf;
 use app::App;
-mod tauri_api;
+pub mod bridge;
 
 
 fn main() {

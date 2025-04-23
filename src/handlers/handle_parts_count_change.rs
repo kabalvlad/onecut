@@ -1,7 +1,8 @@
 use web_sys::{Event, HtmlInputElement};
 use yew::prelude::*;
 use wasm_bindgen_futures::spawn_local;
-use crate::tauri_api::{set_quantity_parts, get_quantity_parts, update_prices};
+use crate::bridge::{set_quantity_parts, get_quantity_parts, update_prices};
+
 
 pub fn handle_parts_count_change() -> Callback<Event> {
     Callback::from(move |e: Event| {
@@ -47,8 +48,18 @@ pub fn handle_parts_count_change() -> Callback<Event> {
                 // Получаем последнее корректное значение из бэкенда и обновляем поле ввода
                 spawn_local(async move {
                     match get_quantity_parts().await {
-                        Ok(count) => {
-                            input.set_value(&count.to_string());
+                        Ok(js_value) => {
+                            // Преобразуем JsValue в i32
+                            if let Some(count) = js_value.as_f64() {
+                                let count_i32 = count as i32;
+                                input.set_value(&count_i32.to_string());
+                            } else {
+                                // Если не удалось преобразовать, устанавливаем значение по умолчанию
+                                web_sys::console::error_1(
+                                    &"Ошибка преобразования количества деталей".into()
+                                );
+                                input.set_value("1");
+                            }
                         },
                         Err(e) => {
                             web_sys::console::error_1(
@@ -62,11 +73,14 @@ pub fn handle_parts_count_change() -> Callback<Event> {
             }
         }
         // В конце обработчика
-        spawn_local(async {
-            if let Err(e) = update_prices().await {
-                web_sys::console::error_1(
-                    &format!("Не удалось обновить цены: {:?}", e).into()
-                );
+        spawn_local(async move {
+            match update_prices().await {
+                Ok(_) => {
+                    web_sys::console::log_1(&"Цены успешно обновлены".into());
+                },
+                Err(e) => {
+                    web_sys::console::error_1(&format!("Ошибка обновления цен: {:?}", e).into());
+                }
             }
         });
     })

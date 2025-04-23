@@ -1,9 +1,9 @@
 // src-tauri/src/price_calculator.rs
 
 use crate::state::{
-    get_bending_points_internal, get_cost_material_internal, get_cut_length_internal,
+     get_cost_material_internal, get_cut_length_internal,
       get_margin_deal_internal, get_powerd_cutting_internal,
-      get_quantity_parts_internal, get_thickness_internal, get_threads_inserts_mats_internal, 
+      get_quantity_parts_internal, get_thickness_internal,  
       get_type_cutting_internal, get_type_material_internal, 
        set_powerd_cutting_internal, set_price_all_parts_internal, set_price_one_part_internal,
         set_speed_cutting_internal
@@ -11,6 +11,8 @@ use crate::state::{
 use crate::state::get_speed_cutting_internal;
 use crate::cutting_data::laser_cutting_speeds::{get_available_thicknesses, get_cutting_speed};
 use crate::cutting_data::MaterialType;
+use log::info;
+
 
 
 // Функция для обработки типа материала 
@@ -48,11 +50,13 @@ fn calculate_steel_coefficient() {
                 // Преобразуем строку thickness в f32
                 if let Ok(thickness) = thickness_str.parse::<f32>() {
                     // Преобразуем строку в MaterialType
+                    info!("Thickness: {}", thickness);
                     let material_type = match material_type_str.as_str() {
                         "steel" => Some(MaterialType::Steel),
                         "aluminum" => Some(MaterialType::Aluminum),
                         _ => None,
                     };
+                    info!("Material Type: {}", material_type_str);
 
                     if let Some(material_type) = material_type {
                         if cutting_type == "laser" {
@@ -61,6 +65,7 @@ fn calculate_steel_coefficient() {
                                 if let Some(speed) = get_cutting_speed(thickness, material_type) {
                                     let _ = set_speed_cutting_internal(speed);
                                     let _ = set_powerd_cutting_internal(4);
+                                    
                                 } else {
                                     println!("Не удалось получить скорость резки для толщины {} мм", thickness);
                                 }
@@ -89,7 +94,7 @@ fn calculate_steel_coefficient() {
 
     pub fn calculate_cutting_price() -> Result<(), String> {
         // Читаем значения из конфигурационного файла
-        if let Ok(config_content) = std::fs::read_to_string("config.txt") {
+        if let Ok(config_content) = std::fs::read_to_string("../config") {
             let values: Vec<f32> = config_content
                 .lines()
                 .filter_map(|line| line.trim().parse().ok())
@@ -108,7 +113,22 @@ fn calculate_steel_coefficient() {
                 let training_personals = values[9];
                 let unforeseen_expenses = values[10];
                 let percent_profits = values[11];
-                let tax_statement = values[12];         
+                let tax_statement = values[12];  
+                info!("{}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}
+                ",
+                employees_salary,
+                shock_absorption_station,
+                cost_electricity
+                , service_refect
+                , consumable_materials
+                , lease_pothek
+                , insurance 
+                , administrative_expenses
+                , equipment_wear
+                , training_personals
+                , unforeseen_expenses
+                , percent_profits
+                , tax_statement   );       
                 
                 // Вызываем process_material_type
                 process_material_type();
@@ -120,6 +140,10 @@ fn calculate_steel_coefficient() {
                 let count_part = get_quantity_parts_internal()?;
                 let cost_matereial = get_cost_material_internal()?;
                 let margin = get_margin_deal_internal()?;
+
+                info!("{}, {}, {}, {}, {}, {}", 
+                power_cutting, cutting_length, cutting_speed, count_part, cost_matereial, margin);
+
                 
                 // Теперь можем использовать power_cutting в умножении
                 let hour_cost =
@@ -127,19 +151,21 @@ fn calculate_steel_coefficient() {
                     service_refect + consumable_materials + lease_pothek + insurance + 
                     administrative_expenses + equipment_wear + training_personals + unforeseen_expenses) * 
                     (1.0 + percent_profits / 100.0) * (1.0 + tax_statement / 100.0);
+                info!("{}", hour_cost);
                 
                 let cutting_price_one = (((hour_cost / 60.0) * ((cutting_length / 100.0) / cutting_speed)) + 
                 cost_matereial) * (1.0 + margin as f32 / 100.0);
                 let cutting_price_all = cutting_price_one * count_part as f32;
                 let _ = set_price_one_part_internal(cutting_price_one);
                 let _ = set_price_all_parts_internal(cutting_price_all);               
-                
+                info!("{}, {}", cutting_price_one, cutting_price_all);
                 Ok(())
             } else {
                 Err("Invalid config file format".to_string())
             }
         } else {
             Err("Failed to read config file".to_string())
+            
         }
     }
     
