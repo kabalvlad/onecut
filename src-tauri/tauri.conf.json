@@ -4,7 +4,7 @@
   "version": "0.1.0",
   "identifier": "com.onecut.app",
   "build": {
-    "beforeDevCommand": "trunk serve",
+    "beforeDevCommand": "trunk serve --port 1420 --no-autoreload",
     "devUrl": "http://localhost:1420",
     "beforeBuildCommand": "trunk build",
     "frontendDist": "../dist"
@@ -14,8 +14,8 @@
     "windows": [
       {
         "title": "onecut",
-        "width": 800,
-        "height": 600
+        "width": 1200,
+        "height": 800
       }
     ],
     "security": {

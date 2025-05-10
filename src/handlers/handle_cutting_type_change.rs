@@ -1,87 +1,58 @@
 use web_sys::{Event, HtmlInputElement};
 use yew::prelude::*;
-use wasm_bindgen::prelude::*;
-use serde::{Serialize, Deserialize};
 use wasm_bindgen_futures::spawn_local;
-use crate::models::{AppState, AppAction};
+use crate::bridge::set_type_cutting;
+use crate::bridge::update_prices;
 
 //===============================================================
 // Обработчик для выбора типа резки
 //===============================================================
 
-#[wasm_bindgen]
-extern "C" {
-    #[wasm_bindgen(js_namespace = ["window", "__TAURI__", "tauri"])]
-    async fn invoke(cmd: &str, args: JsValue) -> JsValue;
-}
-
-#[derive(Serialize, Deserialize)]
-pub struct SetTypeCuttingArgs {
-    pub cutting_type: String,
-}
-
-pub fn handle_cutting_type_change(
-    state: UseReducerHandle<AppState>,
-) -> Callback<Event> {
+pub fn handle_cutting_type_change() -> Callback<Event> {
     Callback::from(move |e: Event| {
         let target = e.target_dyn_into::<HtmlInputElement>().unwrap();
         let value = target.value();
         
         // Получаем код и описание типа резки
         let (cutting_code, cutting_description) = match value.as_str() {
-            "laser" => ("LC", "Лазерная резка"),
-            "plasma" => ("PC", "Плазменная резка"),
-            "hydro" => ("HC", "Гидроабразивная резка"),
+            "laser" => ("laser", "Лазерная резка"),
+            "plasma" => ("plasma", "Плазменная резка"),
+            "hydro" => ("hydro", "Гидроабразивная резка"),
             _ => ("", "Неизвестный тип резки"),
         };
         
-        // Обновляем выбранный тип резки через редуктор
-        state.dispatch(AppAction::SetCuttingType(value.clone()));
-        state.dispatch(AppAction::AddHistoryMessage(
-            format!("Выбран тип резки: {}", cutting_description)
-        ));
+        // Выводим сообщение в консоль
+        web_sys::console::log_1(
+            &format!("Выбран тип резки: {} ЭТО СООБЩЕНИЕ ИЗ САМОГО ОБОРАБОТЧИКА ИГНОР ИХ", cutting_description).into()
+        );
         
-        // Проверяем, доступен ли Tauri API
-        let is_tauri_available = web_sys::window()
-            .and_then(|win| js_sys::Reflect::get(&win, &JsValue::from_str("__TAURI__")).ok())
-            .map(|tauri| !tauri.is_undefined() && !tauri.is_null())
-            .unwrap_or(false);
+        // Отправляем информацию о типе резки на бэкенд через Tauri API
+        let cutting_code_clone = cutting_code.to_string();
+        let cutting_desc_clone = cutting_description.to_string();
         
-        if is_tauri_available {
-            // Отправляем информацию о типе резки на бэкенд через Tauri
-            let args = SetTypeCuttingArgs {
-                cutting_type: cutting_code.to_string(),
-            };
-            let state_clone = state.clone();
-            
-            spawn_local(async move {
-                match serde_wasm_bindgen::to_value(&args) {
-                    Ok(args_js) => {
-                        let result = invoke("set_type_cutting", args_js).await;
-                        if result.is_undefined() {
-                            // Логируем ошибку в консоль
-                            web_sys::console::error_1(
-                                &format!("Ошибка при установке типа резки {} в backend", cutting_code).into()
-                            );
-                            // Отправляем сообщение об ошибке
-                            state_clone.dispatch(AppAction::AddHistoryMessage(
-                                format!("Ошибка: не удалось установить тип резки {} в системе", cutting_description)
-                            ));
-                        }
-                    },
-                    Err(e) => {
-                        web_sys::console::error_1(
-                            &format!("Ошибка сериализации данных: {:?}", e).into()
-                        );
-                    }
+        spawn_local(async move {
+            match set_type_cutting(cutting_code_clone.clone()).await {
+                Ok(_) => {
+                    web_sys::console::log_1(
+                        &format!("Тип резки {} успешно установлен в системе (ЭТО СООБЩЕНИЕ ИЗ САМОГО ОБОРАБОТЧИКА ИГНОР ИХ)", cutting_desc_clone).into()
+                    );
+                },
+                Err(e) => {
+                    web_sys::console::error_1(
+                        &format!("Ошибка при установке типа резки {}: {:?}", cutting_desc_clone, e).into()
+                    );
                 }
-            });
-        } else {
-            // Если Tauri недоступен, просто выводим сообщение
-            web_sys::console::log_1(&"Tauri API недоступен, работаем в режиме веб-приложения".into());
-            state.dispatch(AppAction::AddHistoryMessage(
-                format!("Тип резки {} установлен (режим веб-приложения)", cutting_description)
-            ));
-        }
+            }
+        });
+        spawn_local(async move {
+            match update_prices().await {
+                Ok(_) => {
+                    web_sys::console::log_1(&"Цены успешно обновлены(ЭТО СООБЩЕНИЕ ИЗ САМОГО ОБОРАБОТЧИКА ИГНОР ИХ)".into());
+                },
+                Err(e) => {
+                    web_sys::console::error_1(&format!("Ошибка обновления цен: {:?}", e).into());
+                }
+            }
+        });
     })
 }

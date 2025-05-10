@@ -1,17 +1,23 @@
 use yew::prelude::*;
-use crate::models::{AppState, AppAction};
 
-pub fn handle_input_mode_change(state: UseReducerHandle<AppState>) -> Callback<String> {
+pub fn handle_input_mode_change() -> Callback<String> {
     Callback::from(move |mode: String| {
         match mode.as_str() {
             "file" => {
-                state.dispatch(AppAction::SwitchToFileMode);
+                web_sys::console::log_1(
+                    &"Переключение в режим выбора файла".into()
+                );
             },
             "manual" => {
-                state.dispatch(AppAction::SwitchToManualMode);
+                web_sys::console::log_1(
+                    &"Переключение в режим ручного ввода".into()
+                );
             },
-            _ => {}
+            _ => {
+                web_sys::console::error_1(
+                    &format!("Неизвестный режим ввода: {}", mode).into()
+                );
+            }
         }
     })
 }
-

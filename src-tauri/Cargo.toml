@@ -26,6 +26,28 @@ serde-wasm-bindgen = "0.6"
 dxf = "0.6.0"
 gloo-timers = { version = "0.3.0", features = ["futures"] }
 onecut_ui = { path = ".." }
+once_cell = "1.18.0"
+web-sys = { version = "0.3", features = [
+    "HtmlElement",
+    "Event",
+    "HtmlInputElement",
+    "HtmlSelectElement",
+    "Element",
+    "CustomEvent",  
+    "CustomEventInit",  
+] }
+log = "0.4"
+env_logger = "0.11.8"
+simplelog = "0.12"
+chrono = "0.4"
+
+
+
+
+[features]
+default = []
+mock-tauri = []
+
 
 
 

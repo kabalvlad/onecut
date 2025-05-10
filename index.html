@@ -4,7 +4,36 @@
     <meta charset="utf-8" />
     <title>Tauri + Yew App</title>
     <link data-trunk rel="css" href="static/style.css" />
-    <link data-trunk rel="copy-dir" href="public" />
+    <link data-trunk rel="copy-file" href="src/bridge.js" />
   </head>
-  <body></body>
+  <body>
+    <script>
+      // Ждем полной загрузки страницы и Tauri API
+      window.addEventListener('DOMContentLoaded', function() {
+        // Функция для проверки доступности Tauri API
+        function waitForTauri() {
+          if (window.__TAURI__) {
+            console.log('Tauri API найден, загружаем мост...');
+            
+            // Загружаем скрипт моста
+            const script = document.createElement('script');
+            script.src = './bridge.js';
+            script.onload = function() {
+              console.log('Мост успешно загружен');
+            };
+            script.onerror = function() {
+              console.error('Ошибка загрузки моста');
+            };
+            document.body.appendChild(script);
+          } else {
+            console.log('Tauri API еще не доступен, ждем...');
+            setTimeout(waitForTauri, 100);
+          }
+        }
+        
+        // Начинаем проверку
+        waitForTauri();
+      });
+    </script>
+  </body>
 </html>
